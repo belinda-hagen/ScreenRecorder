@@ -5,13 +5,47 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
   },
-  "keywords": ["screen-recorder", "electron", "video"],
-  "author": "",
+  "keywords": [
+    "screen-recorder",
+    "electron",
+    "video"
+  ],
+  "author": "Belinda Hagen",
   "license": "ISC",
   "type": "commonjs",
+  "build": {
+    "appId": "com.belindahagen.screenrecorder",
+    "productName": "Screen Recorder",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "package.json"
+    ],
+    "win": {
+      "target": ["portable"],
+      "icon": "icon.ico",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "icon.png"
+    }
+  },
   "devDependencies": {
-    "electron": "^39.2.7"
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0"
   }
 }

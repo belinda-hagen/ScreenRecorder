@@ -2,6 +2,15 @@
 
 A simple desktop screen recording application built with Electron.
 
+## Download
+
+Download the latest release from the [Releases](https://github.com/belinda-hagen/ScreenRecorder/releases) page.
+
+**Available formats:**
+- **Windows**: `.exe` installer or portable version
+- **macOS**: `.dmg` disk image
+- **Linux**: `.AppImage` or `.deb` package
+
 ## Features
 
 - Record your entire screen or specific windows
@@ -10,7 +19,13 @@ A simple desktop screen recording application built with Electron.
 - Pause and resume recordings
 - Save recordings as WebM files
 
-## Installation
+## Development
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm
+
+### Setup
 
 1. Clone the repository:
 ```bash
@@ -27,6 +42,23 @@ npm install
 ```bash
 npm start
 ```
+
+### Building
+
+To create distributable packages:
+
+```bash
+# Windows
+npm run build:win
+
+# macOS
+npm run build:mac
+
+# Linux
+npm run build:linux
+```
+
+Built files will be in the `dist` folder.
 
 ## Usage
 
