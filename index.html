@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src 'self' blob:; img-src 'self' data:;">
+  <title>Screen Recorder</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #fff;
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
+
+    .app {
+      width: 100%;
+      background: #fff;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #0078d4;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-icon {
+      width: 20px;
+      height: 20px;
+      color: #fff;
+    }
+
+    .header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .timer-area {
+      background: #fafafa;
+      padding: 28px 20px;
+      text-align: center;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .timer {
+      font-size: 42px;
+      font-weight: 400;
+      font-family: 'Segoe UI', Consolas, monospace;
+      color: #1a1a1a;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #b0b0b0;
+    }
+
+    .status-dot.recording {
+      background: #d13438;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    .status-dot.paused {
+      background: #ca5010;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0.3; }
+    }
+
+    .status-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .content {
+      padding: 16px 20px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-icon {
+      width: 14px;
+      height: 14px;
+      color: #666;
+    }
+
+    .source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .source-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .source-item:hover {
+      background: #f0f0f0;
+    }
+
+    .source-item.selected {
+      background: #e6f2ff;
+      border-color: #0078d4;
+    }
+
+    .source-item img {
+      width: 48px;
+      height: 32px;
+      border-radius: 3px;
+      object-fit: cover;
+      background: #ddd;
+    }
+
+    .source-item span {
+      font-size: 13px;
+      color: #1a1a1a;
+    }
+
+    .options-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .option input {
+      display: none;
+    }
+
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #666;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      transition: all 0.15s;
+    }
+
+    .option input:checked + .checkbox {
+      background: #0078d4;
+      border-color: #0078d4;
+    }
+
+    .checkbox svg {
+      width: 10px;
+      height: 10px;
+      color: #fff;
+      opacity: 0;
+    }
+
+    .option input:checked + .checkbox svg {
+      opacity: 1;
+    }
+
+    .option-text {
+      font-size: 13px;
+      color: #333;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    .btn-record {
+      background: #d13438;
+      color: #fff;
+    }
+
+    .btn-record:hover:not(:disabled) {
+      background: #a4262c;
+    }
+
+    .btn-pause {
+      background: #ca5010;
+      color: #fff;
+    }
+
+    .btn-pause:hover:not(:disabled) {
+      background: #9a3d0d;
+    }
+
+    .btn-stop {
+      background: #605e5c;
+      color: #fff;
+    }
+
+    .btn-stop:hover:not(:disabled) {
+      background: #484644;
+    }
+
+    .btn-secondary {
+      background: #f3f3f3;
+      color: #1a1a1a;
+      border: 1px solid #d0d0d0;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #e5e5e5;
+    }
+
+    .preview-area {
+      margin-bottom: 20px;
+    }
+
+    .preview-video {
+      width: 100%;
+      height: 140px;
+      background: #1a1a1a;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+      background: #107c10;
+    }
+
+    .toast.error {
+      background: #d13438;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <svg class="header-icon" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="4"/>
+      </svg>
+      <h1>Screen Recorder</h1>
+    </div>
+
+    <div class="timer-area">
+      <div class="timer" id="timer">00:00:00</div>
+      <div class="status-row">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-label" id="statusText">Ready</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="preview-area">
+        <div class="section-label">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Preview
+        </div>
+        <video class="preview-video" id="preview" autoplay muted></video>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          Source
+        </div>
+        <div class="source-list" id="sourceList">
+          <div class="source-item" id="selectSource">
+            <span>Select a screen to record...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          Audio
+        </div>
+        <div class="options-row">
+          <label class="option">
+            <input type="checkbox" id="systemAudio" checked>
+            <span class="checkbox">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            <span class="option-text">System</span>
+          </label>
+          <label class="option">
+            <input type="checkbox" id="micAudio" checked>
+            <span class="checkbox">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            <span class="option-text">Microphone</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-record" id="startBtn" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="6"/>
+          </svg>
+          Start Recording
+        </button>
+        <div class="btn-row">
+          <button class="btn btn-pause" id="pauseBtn" disabled>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
+            </svg>
+            Pause
+          </button>
+          <button class="btn btn-stop" id="stopBtn" disabled>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="1"/>
+            </svg>
+            Stop
+          </button>
+        </div>
+        <button class="btn btn-secondary" id="resetBtn" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+          </svg>
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="notification"></div>
+
+  <script>
+    const timerDisplay = document.getElementById('timer');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const sourceList = document.getElementById('sourceList');
+    const systemAudioCheckbox = document.getElementById('systemAudio');
+    const micAudioCheckbox = document.getElementById('micAudio');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const preview = document.getElementById('preview');
+    const notification = document.getElementById('notification');
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let selectedSource = null;
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    let isRecording = false;
+    let isPaused = false;
+    let mediaStream = null;
+
+    function showNotification(message, type = 'info') {
+      notification.textContent = message;
+      notification.className = 'toast show ' + type;
+      setTimeout(() => notification.classList.remove('show'), 3000);
+    }
+
+    function formatTime(seconds) {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimer() {
+      elapsedSeconds++;
+      timerDisplay.textContent = formatTime(elapsedSeconds);
+    }
+
+    function updateStatus(status) {
+      statusText.textContent = status;
+      statusDot.className = 'status-dot';
+      if (status === 'Recording') statusDot.classList.add('recording');
+      else if (status === 'Paused') statusDot.classList.add('paused');
+    }
+
+    async function loadSources() {
+      try {
+        const sources = await window.electronAPI.getSources();
+        if (sources.length === 0) {
+          showNotification('No screen sources found', 'error');
+          return;
+        }
+
+        sourceList.innerHTML = '';
+        sources.forEach(source => {
+          const item = document.createElement('div');
+          item.className = 'source-item';
+          item.innerHTML = `
+            <img src="${source.thumbnail}" alt="${source.name}">
+            <span>${source.name}</span>
+          `;
+          item.onclick = () => selectSource(source, item);
+          sourceList.appendChild(item);
+        });
+      } catch (error) {
+        console.error('Error loading sources:', error);
+        showNotification('Error loading sources', 'error');
+      }
+    }
+
+    function selectSource(source, item) {
+      selectedSource = source;
+      document.querySelectorAll('.source-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      startBtn.disabled = false;
+      showNotification('Source selected', 'success');
+    }
+
+    async function startRecording() {
+      if (!selectedSource) {
+        showNotification('Select a source first', 'error');
+        return;
+      }
+
+      try {
+        const screenConstraints = {
+          audio: systemAudioCheckbox.checked ? { mandatory: { chromeMediaSource: 'desktop' } } : false,
+          video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: selectedSource.id } }
+        };
+
+        mediaStream = await navigator.mediaDevices.getUserMedia(screenConstraints);
+
+        if (micAudioCheckbox.checked) {
+          try {
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            const audioContext = new AudioContext();
+            const destination = audioContext.createMediaStreamDestination();
+            
+            if (mediaStream.getAudioTracks().length > 0) {
+              const screenAudioSource = audioContext.createMediaStreamSource(new MediaStream(mediaStream.getAudioTracks()));
+              screenAudioSource.connect(destination);
+            }
+            
+            const micSource = audioContext.createMediaStreamSource(micStream);
+            micSource.connect(destination);
+            
+            const videoTrack = mediaStream.getVideoTracks()[0];
+            const mixedAudioTrack = destination.stream.getAudioTracks()[0];
+            mediaStream = new MediaStream([videoTrack, mixedAudioTrack]);
+          } catch (micError) {
+            console.warn('Could not access microphone:', micError);
+          }
+        }
+
+        preview.srcObject = mediaStream;
+
+        const options = { mimeType: 'video/webm; codecs=vp9' };
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          options.mimeType = 'video/webm; codecs=vp8';
+        }
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          options.mimeType = 'video/webm';
+        }
+
+        mediaRecorder = new MediaRecorder(mediaStream, options);
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) recordedChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const buffer = await blob.arrayBuffer();
+          const result = await window.electronAPI.saveVideo(buffer);
+          if (result.success) showNotification('Recording saved', 'success');
+          else if (!result.canceled) showNotification('Error saving', 'error');
+        };
+
+        mediaRecorder.start(1000);
+        isRecording = true;
+        isPaused = false;
+        timerInterval = setInterval(updateTimer, 1000);
+
+        updateStatus('Recording');
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
+        resetBtn.disabled = true;
+        
+        showNotification('Recording started', 'success');
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        showNotification('Error: ' + error.message, 'error');
+      }
+    }
+
+    function togglePause() {
+      if (!mediaRecorder) return;
+
+      if (isPaused) {
+        mediaRecorder.resume();
+        timerInterval = setInterval(updateTimer, 1000);
+        isPaused = false;
+        pauseBtn.innerHTML = `
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+          Pause
+        `;
+        updateStatus('Recording');
+      } else {
+        mediaRecorder.pause();
+        clearInterval(timerInterval);
+        isPaused = true;
+        pauseBtn.innerHTML = `
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5,3 19,12 5,21"/>
+          </svg>
+          Resume
+        `;
+        updateStatus('Paused');
+      }
+    }
+
+    function stopRecording() {
+      if (!mediaRecorder) return;
+
+      mediaRecorder.stop();
+      if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+      clearInterval(timerInterval);
+      
+      isRecording = false;
+      isPaused = false;
+
+      updateStatus('Stopped');
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      stopBtn.disabled = true;
+      resetBtn.disabled = false;
+      pauseBtn.innerHTML = `
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+        Pause
+      `;
+      preview.srcObject = null;
+    }
+
+    function resetRecorder() {
+      elapsedSeconds = 0;
+      timerDisplay.textContent = '00:00:00';
+      recordedChunks = [];
+      selectedSource = null;
+      
+      document.querySelectorAll('.source-item').forEach(el => el.classList.remove('selected'));
+      
+      updateStatus('Ready');
+      startBtn.disabled = true;
+      resetBtn.disabled = true;
+      
+      loadSources();
+      showNotification('Reset complete', 'success');
+    }
+
+    startBtn.addEventListener('click', startRecording);
+    pauseBtn.addEventListener('click', togglePause);
+    stopBtn.addEventListener('click', stopRecording);
+    resetBtn.addEventListener('click', resetRecorder);
+
+    loadSources();
+  </script>
+</body>
+</html>
