@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -80,4 +80,9 @@ ipcMain.handle('save-video', async (event, buffer) => {
     console.error('Error saving video:', error);
     return { success: false, error: error.message };
   }
+});
+
+// Handle opening external URLs
+ipcMain.handle('open-external', async (event, url) => {
+  await shell.openExternal(url);
 });
