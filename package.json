@@ -21,6 +21,7 @@
   "build": {
     "appId": "com.belindahagen.screenrecorder",
     "productName": "Screen Recorder",
+    "artifactName": "ScreenRecorder-${version}.${ext}",
     "directories": {
       "output": "dist"
     },
