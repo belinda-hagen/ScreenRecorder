@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.2.0-667eea?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/electron-39.2.7-764ba2?style=for-the-badge&logo=electron" alt="Electron">
-  <img src="https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-4ade80?style=for-the-badge" alt="Platform">
+  <img src="https://img.shields.io/badge/platform-Windows-4ade80?style=for-the-badge" alt="Platform">
   <img src="https://img.shields.io/badge/license-MIT-fbbf24?style=for-the-badge" alt="License">
 </p>
 
@@ -26,25 +26,25 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- 🖥️ Record your entire screen or specific windows
-- 🔊 Capture system audio and microphone input
-- 👁️ Live preview while recording
-- ⏸️ Pause and resume recordings
-- 💾 Save recordings as WebM files
-- 🎨 Modern, beautiful purple-themed UI
+- Record your entire screen or specific windows
+- Capture system audio and microphone input
+- Live preview while recording
+- Pause and resume recordings
+- Save recordings as WebM files
+- Modern, beautiful purple-themed UI
 
-## 📥 Download
+## Download
 
 Download the latest release from the [Releases](https://github.com/belinda-hagen/ScreenRecorder/releases) page.
 
-**Available formats:**
+**Available for:**
 - **Windows**: `.exe` portable version
-- **macOS**: `.dmg` disk image
-- **Linux**: `.AppImage` or `.deb` package
 
-## 🚀 Development
+> **Note**: Currently only Windows builds are available. macOS and Linux users can build from source (see Development section below).
+
+## Development
 
 ### Prerequisites
 - Node.js (v18 or higher)
@@ -68,15 +68,21 @@ npm install
 npm start
 ```
 
-### 🔨 Building
+### Building
 
-To create distributable packages:
+To create distributable packages for your current platform:
+
+```bash
+npm run build
+```
+
+To build for a specific platform:
 
 ```bash
 # Windows
 npm run build:win
 
-# macOS
+# macOS (requires macOS)
 npm run build:mac
 
 # Linux
@@ -85,7 +91,9 @@ npm run build:linux
 
 Built files will be in the `dist` folder.
 
-## 📖 Usage
+> **Note**: Cross-platform building has limitations. Building macOS apps requires a Mac. Windows and Linux can often be cross-compiled, but native builds are recommended.
+
+## Usage
 
 1. Select a screen source from the list
 2. Toggle audio options (System audio / Microphone)
@@ -93,18 +101,12 @@ Built files will be in the `dist` folder.
 4. Use **Pause** to pause/resume the recording
 5. Click **Stop** to finish and save your recording
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Electron** - Cross-platform desktop apps
 - **HTML/CSS/JavaScript** - Frontend
 - **MediaRecorder API** - Screen capture
 
-## 📝 License
+## License
 
 MIT License - feel free to use this project for personal or commercial purposes.
-
----
-
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/belinda-hagen">Belinda Hagen</a>
-</p>
