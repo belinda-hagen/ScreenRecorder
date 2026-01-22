@@ -7,5 +7,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window controls
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
   maximizeWindow: () => ipcRenderer.send('window-maximize'),
-  closeWindow: () => ipcRenderer.send('window-close')
+  closeWindow: () => ipcRenderer.send('window-close'),
+  // Selection recording
+  getDisplays: () => ipcRenderer.invoke('get-displays'),
+  openSelectionWindow: () => ipcRenderer.invoke('open-selection-window'),
+  sendSelectionComplete: (selection) => ipcRenderer.send('selection-complete', selection),
+  sendSelectionCancelled: () => ipcRenderer.send('selection-cancelled')
 });
