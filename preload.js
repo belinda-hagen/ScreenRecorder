@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeWindow: () => ipcRenderer.send('window-close'),
   // Selection recording
   getDisplays: () => ipcRenderer.invoke('get-displays'),
-  openSelectionWindow: () => ipcRenderer.invoke('open-selection-window'),
+  openSelectionWindow: (displayId) => ipcRenderer.invoke('open-selection-window', displayId),
   sendSelectionComplete: (selection) => ipcRenderer.send('selection-complete', selection),
   sendSelectionCancelled: () => ipcRenderer.send('selection-cancelled')
 });

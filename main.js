@@ -232,24 +232,28 @@ ipcMain.handle('get-displays', () => {
 });
 
 // Handle opening selection overlay window
-ipcMain.handle('open-selection-window', async () => {
+ipcMain.handle('open-selection-window', async (event, displayId) => {
   return new Promise((resolve) => {
-    // Get the combined bounds of all displays
     const displays = screen.getAllDisplays();
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let targetDisplay;
     
-    displays.forEach(display => {
-      minX = Math.min(minX, display.bounds.x);
-      minY = Math.min(minY, display.bounds.y);
-      maxX = Math.max(maxX, display.bounds.x + display.bounds.width);
-      maxY = Math.max(maxY, display.bounds.y + display.bounds.height);
-    });
+    if (displayId !== undefined && displayId !== null) {
+      // Find the specific display
+      targetDisplay = displays.find(d => d.id === displayId);
+    }
+    
+    if (!targetDisplay) {
+      // Use primary display if no specific one requested
+      targetDisplay = screen.getPrimaryDisplay();
+    }
+
+    const bounds = targetDisplay.bounds;
 
     selectionWindow = new BrowserWindow({
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
       frame: false,
       transparent: true,
       alwaysOnTop: true,
@@ -267,20 +271,39 @@ ipcMain.handle('open-selection-window', async () => {
     selectionWindow.loadFile('selection.html');
     selectionWindow.setVisibleOnAllWorkspaces(true);
 
+    // Clean up any existing listeners
+    ipcMain.removeAllListeners('selection-complete');
+    ipcMain.removeAllListeners('selection-cancelled');
+
     // Listen for selection result
-    ipcMain.once('selection-complete', (event, selection) => {
-      if (selectionWindow) {
+    ipcMain.once('selection-complete', (e, selection) => {
+      if (selectionWindow && !selectionWindow.isDestroyed()) {
         selectionWindow.close();
         selectionWindow = null;
       }
-      resolve(selection);
+      // Convert local window coordinates to absolute screen coordinates
+      const absoluteSelection = {
+        x: selection.x + bounds.x,
+        y: selection.y + bounds.y,
+        width: selection.width,
+        height: selection.height,
+        displayId: targetDisplay.id,
+        displayBounds: targetDisplay.bounds
+      };
+      resolve(absoluteSelection);
     });
 
     ipcMain.once('selection-cancelled', () => {
-      if (selectionWindow) {
+      if (selectionWindow && !selectionWindow.isDestroyed()) {
         selectionWindow.close();
         selectionWindow = null;
       }
+      resolve(null);
+    });
+
+    // Also handle window close
+    selectionWindow.on('closed', () => {
+      selectionWindow = null;
       resolve(null);
     });
   });

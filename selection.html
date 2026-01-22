@@ -34,15 +34,16 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: #fff;
-            padding: 20px 30px;
+            padding: 24px 32px;
             border-radius: 12px;
             font-family: 'Segoe UI', -apple-system, sans-serif;
             text-align: center;
             z-index: 1000;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.3);
         }
 
         .instructions h2 {
@@ -56,6 +57,12 @@
             color: #9ca3af;
         }
 
+        .instructions .tip {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #667eea;
+        }
+
         .instructions.hidden {
             opacity: 0;
         }
@@ -66,6 +73,7 @@
             background: rgba(102, 126, 234, 0.1);
             pointer-events: none;
             display: none;
+            z-index: 100;
         }
 
         .selection-box.active {
@@ -163,6 +171,7 @@
     <div class="instructions" id="instructions">
         <h2>Draw Selection Area</h2>
         <p>Click and drag to select the area to record.<br>Press <strong>Escape</strong> to cancel.</p>
+        <p class="tip">Press Enter to confirm after drawing</p>
     </div>
 
     <div class="selection-box" id="selectionBox">
@@ -269,6 +278,7 @@
                 return;
             }
 
+            // Store selection with local coordinates (will be converted by main process)
             currentSelection = {
                 x: Math.round(x),
                 y: Math.round(y),

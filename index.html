@@ -741,6 +741,107 @@
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(118, 75, 162, 0.5);
     }
+
+    /* Monitor Selection Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 1px solid rgba(118, 75, 162, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal h3 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .monitor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .monitor-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(118, 75, 162, 0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .monitor-item:hover {
+      background: rgba(102, 126, 234, 0.2);
+      border-color: rgba(118, 75, 162, 0.4);
+    }
+
+    .monitor-item svg {
+      width: 32px;
+      height: 32px;
+      color: #a78bfa;
+    }
+
+    .monitor-info {
+      flex: 1;
+    }
+
+    .monitor-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+
+    .monitor-details {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .modal-cancel {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid rgba(118, 75, 162, 0.3);
+      border-radius: 8px;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-cancel:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
   </style>
 </head>
 
@@ -897,6 +998,17 @@
           Reset
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Monitor Selection Modal -->
+  <div class="modal-overlay" id="monitorModal">
+    <div class="modal">
+      <h3>Select Monitor for Selection Area</h3>
+      <div class="monitor-list" id="monitorList">
+        <!-- Monitors will be populated dynamically -->
+      </div>
+      <button class="modal-cancel" id="cancelMonitorBtn">Cancel</button>
     </div>
   </div>
 
@@ -1086,25 +1198,75 @@
 
     async function openSelectionWindow() {
       try {
-        showNotification('Draw a selection on your screen...', 'info');
-        const selection = await window.electronAPI.openSelectionWindow();
-
-        if (selection) {
-          selectionArea = selection;
-
-          // Update the preview
-          const previewEl = document.getElementById('selectionPreview');
-          previewEl.textContent = `Region: ${selection.width} × ${selection.height} at (${selection.x}, ${selection.y})`;
-          previewEl.classList.add('has-selection');
-
-          startBtn.disabled = false;
-          showNotification(`Selection set: ${selection.width}×${selection.height}`, 'success');
+        // Get available displays
+        const displays = await window.electronAPI.getDisplays();
+        
+        if (displays.length === 1) {
+          // Only one display, skip modal and open selection directly
+          showNotification('Draw a selection on your screen...', 'info');
+          const selection = await window.electronAPI.openSelectionWindow(displays[0].id);
+          handleSelectionResult(selection);
         } else {
-          showNotification('Selection cancelled', 'info');
+          // Multiple displays, show modal
+          showMonitorModal(displays);
         }
       } catch (error) {
         console.error('Error opening selection window:', error);
         showNotification('Error opening selection window', 'error');
+      }
+    }
+
+    function showMonitorModal(displays) {
+      const modal = document.getElementById('monitorModal');
+      const monitorList = document.getElementById('monitorList');
+      
+      // Populate monitor list
+      monitorList.innerHTML = '';
+      displays.forEach((display, index) => {
+        const isPrimary = display.bounds.x === 0 && display.bounds.y === 0;
+        const item = document.createElement('div');
+        item.className = 'monitor-item';
+        item.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          <div class="monitor-info">
+            <div class="monitor-name">Monitor ${index + 1}${isPrimary ? ' (Primary)' : ''}</div>
+            <div class="monitor-details">${display.bounds.width} × ${display.bounds.height}</div>
+          </div>
+        `;
+        item.addEventListener('click', async () => {
+          modal.classList.remove('show');
+          showNotification('Draw a selection on your screen...', 'info');
+          const selection = await window.electronAPI.openSelectionWindow(display.id);
+          handleSelectionResult(selection);
+        });
+        monitorList.appendChild(item);
+      });
+      
+      modal.classList.add('show');
+    }
+
+    // Handle cancel button in modal
+    document.getElementById('cancelMonitorBtn').addEventListener('click', () => {
+      document.getElementById('monitorModal').classList.remove('show');
+    });
+
+    function handleSelectionResult(selection) {
+      if (selection) {
+        selectionArea = selection;
+
+        // Update the preview
+        const previewEl = document.getElementById('selectionPreview');
+        previewEl.textContent = `Region: ${selection.width} × ${selection.height} at (${selection.x}, ${selection.y})`;
+        previewEl.classList.add('has-selection');
+
+        startBtn.disabled = false;
+        showNotification(`Selection set: ${selection.width}×${selection.height}`, 'success');
+      } else {
+        showNotification('Selection cancelled', 'info');
       }
     }
 
@@ -1127,8 +1289,14 @@
         if (selectedSource.id === 'selection') {
           const sources = await window.electronAPI.getSources();
           if (sources.length > 0) {
-            // Use the first screen source (primary display)
-            sourceId = sources[0].id;
+            // Try to find the screen source for the specific display
+            let matchingSource = null;
+            if (selectionArea.displayId) {
+              // Look for a screen source that matches the display
+              matchingSource = sources.find(s => s.display_id === String(selectionArea.displayId));
+            }
+            // Fall back to first screen source if no match
+            sourceId = matchingSource ? matchingSource.id : sources[0].id;
           } else {
             showNotification('No screen source available', 'error');
             return;

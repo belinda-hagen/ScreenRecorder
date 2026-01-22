@@ -1,6 +1,6 @@
 {
   "name": "screenrecorder",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "A screen recorder application with audio capture",
   "main": "main.js",
   "scripts": {
