@@ -2,7 +2,7 @@
   <img src="icon.png" alt="Screen Recorder Icon" width="128" height="128">
 </p>
 
-<h1 align="center">Screen Recorder</h1>
+<h1 align="center">ScreenRecorder</h1>
 
 <p align="center">
   A simple, elegant desktop screen recording application built with Electron
