@@ -523,6 +523,73 @@
       color: #e4e4e7;
     }
 
+    /* Output format */
+    .format-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .format-select-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .format-select {
+      width: 100%;
+      padding: 10px 36px 10px 12px;
+      background: rgba(102, 126, 234, 0.08);
+      border: 1px solid rgba(118, 75, 162, 0.15);
+      border-radius: 8px;
+      color: #e4e4e7;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      appearance: none;
+      transition: all 0.2s ease;
+    }
+
+    .format-select:hover {
+      background: rgba(102, 126, 234, 0.15);
+      border-color: rgba(118, 75, 162, 0.3);
+    }
+
+    .format-select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .format-select option {
+      background: #1a1a2e;
+      color: #e4e4e7;
+      padding: 8px;
+    }
+
+    .format-select-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid #a78bfa;
+      pointer-events: none;
+    }
+
+    .format-note {
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .format-note.warning {
+      color: #fbbf24;
+    }
+
     /* Controls */
     .controls {
       display: flex;
@@ -776,6 +843,30 @@
         </div>
       </div>
 
+      <div class="section">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="12" y1="18" x2="12" y2="12" />
+            <line x1="9" y1="15" x2="15" y2="15" />
+          </svg>
+          <span>Output Format</span>
+        </div>
+        <div class="format-row">
+          <div class="format-select-wrapper">
+            <select class="format-select" id="outputFormat">
+              <option value="webm">WebM (Native, Fast)</option>
+              <option value="mp4">MP4 (H.264, Universal)</option>
+              <option value="mkv">MKV (Matroska)</option>
+              <option value="mov">MOV (QuickTime)</option>
+              <option value="avi">AVI (Legacy)</option>
+            </select>
+          </div>
+        </div>
+        <div class="format-note" id="formatNote">WebM is recorded natively without conversion</div>
+      </div>
+
       <div class="controls">
         <button class="btn btn-primary" id="startBtn" disabled>
           <svg viewBox="0 0 24 24" fill="currentColor">
@@ -832,6 +923,8 @@
     const previewOverlay = document.getElementById('previewOverlay');
     const notification = document.getElementById('notification');
     const notificationText = document.getElementById('notificationText');
+    const outputFormatSelect = document.getElementById('outputFormat');
+    const formatNote = document.getElementById('formatNote');
 
     let mediaRecorder = null;
     let recordedChunks = [];
@@ -842,6 +935,39 @@
     let isPaused = false;
     let mediaStream = null;
     let selectionArea = null; // For selection recording
+    let ffmpegAvailable = false;
+
+    // Check FFmpeg availability on load
+    async function checkFfmpeg() {
+      try {
+        ffmpegAvailable = await window.electronAPI.checkFfmpeg();
+        updateFormatNote();
+      } catch (e) {
+        ffmpegAvailable = false;
+      }
+    }
+
+    function updateFormatNote() {
+      const format = outputFormatSelect.value;
+      if (format === 'webm') {
+        formatNote.textContent = 'WebM is recorded natively without conversion';
+        formatNote.className = 'format-note';
+      } else if (!ffmpegAvailable) {
+        formatNote.textContent = '⚠ FFmpeg not found. Install FFmpeg or use WebM format.';
+        formatNote.className = 'format-note warning';
+      } else {
+        const formatDescriptions = {
+          'mp4': 'MP4 will be converted after recording (H.264/AAC)',
+          'mkv': 'MKV will be converted after recording (H.264/AAC)',
+          'mov': 'MOV will be converted after recording (H.264/AAC)',
+          'avi': 'AVI will be converted after recording (Xvid/MP3)'
+        };
+        formatNote.textContent = formatDescriptions[format] || '';
+        formatNote.className = 'format-note';
+      }
+    }
+
+    outputFormatSelect.addEventListener('change', updateFormatNote);
 
     function showNotification(message, type = 'info') {
       notificationText.textContent = message;
@@ -1118,11 +1244,18 @@
         };
 
         mediaRecorder.onstop = async () => {
+          const selectedFormat = outputFormatSelect.value;
           const blob = new Blob(recordedChunks, { type: 'video/webm' });
           const buffer = await blob.arrayBuffer();
-          const result = await window.electronAPI.saveVideo(buffer);
-          if (result.success) showNotification('Recording saved', 'success');
-          else if (!result.canceled) showNotification('Error saving', 'error');
+
+          // Show converting notification for non-webm formats
+          if (selectedFormat !== 'webm') {
+            showNotification('Converting to ' + selectedFormat.toUpperCase() + '...', 'info');
+          }
+
+          const result = await window.electronAPI.saveVideo(buffer, selectedFormat);
+          if (result.success) showNotification('Recording saved as ' + selectedFormat.toUpperCase(), 'success');
+          else if (!result.canceled) showNotification(result.error || 'Error saving', 'error');
         };
 
         mediaRecorder.start(1000);
@@ -1259,6 +1392,7 @@
     });
 
     loadSources();
+    checkFfmpeg();
   </script>
 </body>
 

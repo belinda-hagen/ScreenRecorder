@@ -1,6 +1,16 @@
 const { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
+
+// Get ffmpeg path - try bundled first, then system
+let ffmpegPath;
+try {
+  ffmpegPath = require('ffmpeg-static');
+} catch (e) {
+  // Fallback to system ffmpeg
+  ffmpegPath = 'ffmpeg';
+}
 
 let mainWindow;
 let selectionWindow = null;
@@ -8,9 +18,9 @@ let selectionWindow = null;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 360,
-    height: 820,
+    height: 880,
     minWidth: 340,
-    minHeight: 650,
+    minHeight: 700,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -80,13 +90,23 @@ ipcMain.handle('get-sources', async () => {
 });
 
 // Handle saving the recorded video
-ipcMain.handle('save-video', async (event, buffer) => {
+ipcMain.handle('save-video', async (event, buffer, format = 'webm') => {
   try {
+    const formatExtensions = {
+      'webm': 'webm',
+      'mp4': 'mp4',
+      'mkv': 'mkv',
+      'avi': 'avi',
+      'mov': 'mov'
+    };
+
+    const ext = formatExtensions[format] || 'webm';
+    
     const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
       title: 'Save Recording',
-      defaultPath: `screen-recording-${Date.now()}.webm`,
+      defaultPath: `screen-recording-${Date.now()}.${ext}`,
       filters: [
-        { name: 'WebM Video', extensions: ['webm'] },
+        { name: `${ext.toUpperCase()} Video`, extensions: [ext] },
         { name: 'All Files', extensions: ['*'] }
       ]
     });
@@ -95,12 +115,106 @@ ipcMain.handle('save-video', async (event, buffer) => {
       return { success: false, canceled: true };
     }
 
-    fs.writeFileSync(filePath, Buffer.from(buffer));
-    return { success: true, filePath };
+    // If format is webm, save directly
+    if (format === 'webm') {
+      fs.writeFileSync(filePath, Buffer.from(buffer));
+      return { success: true, filePath };
+    }
+
+    // For other formats, need to convert using ffmpeg
+    // Save webm to temp file first
+    const tempPath = path.join(app.getPath('temp'), `temp-recording-${Date.now()}.webm`);
+    fs.writeFileSync(tempPath, Buffer.from(buffer));
+
+    // Convert using ffmpeg
+    return new Promise((resolve) => {
+      const args = [
+        '-i', tempPath,
+        '-y', // Overwrite output file if exists
+      ];
+
+      // Format-specific encoding options
+      switch (format) {
+        case 'mp4':
+          // Add video filter to ensure dimensions are divisible by 2 (required by H.264)
+          args.push('-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2');
+          args.push('-c:v', 'libx264', '-preset', 'fast', '-crf', '22');
+          args.push('-c:a', 'aac', '-b:a', '128k');
+          args.push('-movflags', '+faststart');
+          break;
+        case 'mkv':
+          args.push('-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2');
+          args.push('-c:v', 'libx264', '-preset', 'fast', '-crf', '22');
+          args.push('-c:a', 'aac', '-b:a', '128k');
+          break;
+        case 'avi':
+          args.push('-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2');
+          args.push('-c:v', 'libxvid', '-qscale:v', '4');
+          args.push('-c:a', 'libmp3lame', '-b:a', '128k');
+          break;
+        case 'mov':
+          args.push('-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2');
+          args.push('-c:v', 'libx264', '-preset', 'fast', '-crf', '22');
+          args.push('-c:a', 'aac', '-b:a', '128k');
+          break;
+      }
+
+      args.push(filePath);
+
+      const ffmpeg = spawn(ffmpegPath, args);
+
+      let errorOutput = '';
+
+      ffmpeg.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+
+      ffmpeg.on('close', (code) => {
+        // Clean up temp file
+        try {
+          fs.unlinkSync(tempPath);
+        } catch (e) {
+          console.error('Error deleting temp file:', e);
+        }
+
+        if (code === 0) {
+          resolve({ success: true, filePath });
+        } else {
+          console.error('FFmpeg error:', errorOutput);
+          resolve({ success: false, error: `Conversion failed (code ${code})` });
+        }
+      });
+
+      ffmpeg.on('error', (err) => {
+        // Clean up temp file
+        try {
+          fs.unlinkSync(tempPath);
+        } catch (e) {
+          console.error('Error deleting temp file:', e);
+        }
+        console.error('FFmpeg spawn error:', err);
+        resolve({ success: false, error: 'FFmpeg not available. Please install FFmpeg or use WebM format.' });
+      });
+    });
   } catch (error) {
     console.error('Error saving video:', error);
     return { success: false, error: error.message };
   }
+});
+
+// Check if ffmpeg is available
+ipcMain.handle('check-ffmpeg', async () => {
+  return new Promise((resolve) => {
+    const ffmpeg = spawn(ffmpegPath, ['-version']);
+    
+    ffmpeg.on('close', (code) => {
+      resolve(code === 0);
+    });
+
+    ffmpeg.on('error', () => {
+      resolve(false);
+    });
+  });
 });
 
 // Handle opening external URLs
