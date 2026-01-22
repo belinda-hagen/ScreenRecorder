@@ -76,4 +76,4 @@ Built files will be in the `dist` folder.
 
 ## License
 
-ISC
+MIT
