@@ -1,6 +1,6 @@
 {
   "name": "screenrecorder",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A screen recorder application with audio capture",
   "main": "main.js",
   "scripts": {
@@ -28,18 +28,19 @@
       "main.js",
       "preload.js",
       "index.html",
-      "package.json"
+      "package.json",
+      "icon.png"
     ],
     "win": {
       "target": [
         "portable"
       ],
-      "icon": "icon.ico",
+      "icon": "build/icons/icon.ico",
       "signAndEditExecutable": false
     },
     "mac": {
       "target": "dmg",
-      "icon": "icon.icns"
+      "icon": "build/icons/icon.icns"
     },
     "linux": {
       "target": [
@@ -52,6 +53,7 @@
   "devDependencies": {
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
+    "electron-icon-builder": "^2.0.1",
     "png-to-ico": "^3.0.1",
     "png2icons": "^2.0.1",
     "sharp": "^0.34.5",
