@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.2.0-667eea?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/electron-39.2.7-764ba2?style=for-the-badge&logo=electron" alt="Electron">
-  <img src="https://img.shields.io/badge/platform-Windows-4ade80?style=for-the-badge" alt="Platform">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-4ade80?style=for-the-badge" alt="Platform">
   <img src="https://img.shields.io/badge/license-MIT-fbbf24?style=for-the-badge" alt="License">
 </p>
 
@@ -29,10 +29,11 @@
 ## Features
 
 - Record your entire screen or specific windows
+- **Record a selected region** - draw a rectangle to record only that area
 - Capture system audio and microphone input
 - Live preview while recording
 - Pause and resume recordings
-- Save recordings as WebM files
+- **Multiple export formats**: WebM (native), MP4, MKV, MOV, AVI
 - Modern, beautiful purple-themed UI
 
 ## Download
@@ -40,30 +41,36 @@
 Download the latest release from the [Releases](https://github.com/belinda-hagen/ScreenRecorder/releases) page.
 
 **Available for:**
-- **Windows**: `.exe` portable version
 
-> **Note**: Currently only Windows builds are available. macOS and Linux users can build from source (see Development section below).
+- **Windows**: `.exe` portable version
+- **Linux**: `.AppImage` and `.deb` packages
+
+> **Note**: macOS users can build from source (see Development section below).
 
 ## Development
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - npm
 
 ### Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/belinda-hagen/ScreenRecorder.git
 cd ScreenRecorder
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Run the application:
+
 ```bash
 npm start
 ```
@@ -82,7 +89,7 @@ To build for a specific platform:
 # Windows
 npm run build:win
 
-# macOS 
+# macOS
 npm run build:mac
 
 # Linux
