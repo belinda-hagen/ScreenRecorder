@@ -82,7 +82,7 @@ To build for a specific platform:
 # Windows
 npm run build:win
 
-# macOS (requires macOS)
+# macOS 
 npm run build:mac
 
 # Linux
