@@ -1264,7 +1264,7 @@
         timerInterval = setInterval(updateTimer, 1000);
 
         updateStatus('Recording');
-        startBtn.disabled = true;
+        startBtn.style.display = 'none';
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
         resetBtn.disabled = true;
@@ -1326,6 +1326,7 @@
       isPaused = false;
 
       updateStatus('Stopped');
+      startBtn.style.display = 'flex';
       startBtn.disabled = false;
       pauseBtn.disabled = true;
       stopBtn.disabled = true;
