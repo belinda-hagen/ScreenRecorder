@@ -6,10 +6,10 @@ let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 380,
-    height: 820,
-    minWidth: 380,
-    minHeight: 700,
+    width: 360,
+    height: 760,
+    minWidth: 340,
+    minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -18,11 +18,31 @@ function createWindow() {
     icon: path.join(__dirname, 'icon.png'),
     title: 'Screen Recorder',
     resizable: true,
-    autoHideMenuBar: true
+    autoHideMenuBar: true,
+    frame: false,
+    transparent: false,
+    backgroundColor: '#1a1a2e'
   });
 
   mainWindow.loadFile('index.html');
 }
+
+// Window control handlers
+ipcMain.on('window-minimize', () => {
+  mainWindow.minimize();
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize();
+  } else {
+    mainWindow.maximize();
+  }
+});
+
+ipcMain.on('window-close', () => {
+  mainWindow.close();
+});
 
 app.whenReady().then(() => {
   createWindow();
