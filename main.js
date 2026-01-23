@@ -26,12 +26,16 @@ function createWindow() {
       nodeIntegration: false
     },
     icon: path.join(__dirname, 'icon.png'),
+    ...(process.platform === 'win32' && {
+      // Note: use 8-digit hex for alpha transparency. '#00000000' = fully transparent
+      backgroundColor: '#00000000',
+      roundedCorners: true,
+    }),
     title: 'Screen Recorder',
     resizable: true,
     autoHideMenuBar: true,
     frame: false,
     transparent: true,
-    backgroundColor: '#ffffff00'
   });
 
   mainWindow.loadFile('index.html');
