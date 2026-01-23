@@ -17,7 +17,7 @@
     "video"
   ],
   "author": "Belinda Hagen",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "build": {
     "appId": "com.belindahagen.screenrecorder",
