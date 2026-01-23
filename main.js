@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -13,7 +13,6 @@ try {
 }
 
 let mainWindow;
-let selectionWindow = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -220,91 +219,4 @@ ipcMain.handle('check-ffmpeg', async () => {
 // Handle opening external URLs
 ipcMain.handle('open-external', async (event, url) => {
   await shell.openExternal(url);
-});
-
-// Handle getting all displays for selection
-ipcMain.handle('get-displays', () => {
-  return screen.getAllDisplays().map(display => ({
-    id: display.id,
-    bounds: display.bounds,
-    scaleFactor: display.scaleFactor
-  }));
-});
-
-// Handle opening selection overlay window
-ipcMain.handle('open-selection-window', async (event, displayId) => {
-  return new Promise((resolve) => {
-    const displays = screen.getAllDisplays();
-    let targetDisplay;
-    
-    if (displayId !== undefined && displayId !== null) {
-      // Find the specific display
-      targetDisplay = displays.find(d => d.id === displayId);
-    }
-    
-    if (!targetDisplay) {
-      // Use primary display if no specific one requested
-      targetDisplay = screen.getPrimaryDisplay();
-    }
-
-    const bounds = targetDisplay.bounds;
-
-    selectionWindow = new BrowserWindow({
-      x: bounds.x,
-      y: bounds.y,
-      width: bounds.width,
-      height: bounds.height,
-      frame: false,
-      transparent: true,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-      resizable: false,
-      movable: false,
-      fullscreenable: false,
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-        contextIsolation: true,
-        nodeIntegration: false
-      }
-    });
-
-    selectionWindow.loadFile('selection.html');
-    selectionWindow.setVisibleOnAllWorkspaces(true);
-
-    // Clean up any existing listeners
-    ipcMain.removeAllListeners('selection-complete');
-    ipcMain.removeAllListeners('selection-cancelled');
-
-    // Listen for selection result
-    ipcMain.once('selection-complete', (e, selection) => {
-      if (selectionWindow && !selectionWindow.isDestroyed()) {
-        selectionWindow.close();
-        selectionWindow = null;
-      }
-      // Convert local window coordinates to absolute screen coordinates
-      const absoluteSelection = {
-        x: selection.x + bounds.x,
-        y: selection.y + bounds.y,
-        width: selection.width,
-        height: selection.height,
-        displayId: targetDisplay.id,
-        displayBounds: targetDisplay.bounds
-      };
-      resolve(absoluteSelection);
-    });
-
-    ipcMain.once('selection-cancelled', () => {
-      if (selectionWindow && !selectionWindow.isDestroyed()) {
-        selectionWindow.close();
-        selectionWindow = null;
-      }
-      resolve(null);
-    });
-
-    // Also handle window close
-    selectionWindow.on('closed', () => {
-      selectionWindow = null;
-      resolve(null);
-    });
-  });
 });
