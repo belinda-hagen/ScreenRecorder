@@ -49,7 +49,7 @@
       "target": [
         "AppImage"
       ],
-      "icon": "icon.png"
+      "icon": "build/icons/icon.png"
     }
   },
   "devDependencies": {
