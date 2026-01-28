@@ -9,20 +9,18 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.2-667eea?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/electron-39.2.7-764ba2?style=for-the-badge&logo=electron" alt="Electron">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-4ade80?style=for-the-badge" alt="Platform">
-  <img src="https://img.shields.io/badge/license-MIT-fbbf24?style=for-the-badge" alt="License">
-</p>
-
-<p align="center">
+  <img src="https://img.shields.io/badge/version-1.3.2-667eea?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/electron-39.2.7-764ba2?style=for-the-badge&logo=electron" />
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-4ade80?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/license-MIT-fbbf24?style=for-the-badge" />
   <a href="https://github.com/belinda-hagen/ScreenRecorder/releases">
-    <img src="https://img.shields.io/github/downloads/belinda-hagen/ScreenRecorder/total?style=for-the-badge&color=ef4444&label=Downloads&cacheSeconds=3600" alt="Downloads">
+    <img src="https://img.shields.io/github/downloads/belinda-hagen/ScreenRecorder/total?style=for-the-badge&color=ef4444&label=Downloads" />
   </a>
   <a href="https://github.com/belinda-hagen/ScreenRecorder/releases/latest">
-    <img src="https://img.shields.io/github/v/release/belinda-hagen/ScreenRecorder?style=for-the-badge&color=22c55e&label=Latest" alt="Latest Release">
+    <img src="https://img.shields.io/github/v/release/belinda-hagen/ScreenRecorder?style=for-the-badge&color=22c55e&label=Latest" />
   </a>
 </p>
+
 
 ---
 
