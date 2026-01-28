@@ -16,9 +16,6 @@
   <a href="https://github.com/belinda-hagen/ScreenRecorder/releases">
     <img src="https://img.shields.io/github/downloads/belinda-hagen/ScreenRecorder/total?style=for-the-badge&color=ef4444&label=Downloads" />
   </a>
-  <a href="https://github.com/belinda-hagen/ScreenRecorder/releases/latest">
-    <img src="https://img.shields.io/github/v/release/belinda-hagen/ScreenRecorder?style=for-the-badge&color=22c55e&label=Latest" />
-  </a>
 </p>
 
 
