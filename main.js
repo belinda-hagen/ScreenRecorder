@@ -81,7 +81,8 @@ ipcMain.handle('get-sources', async () => {
     return sources.map(source => ({
       id: source.id,
       name: source.name,
-      thumbnail: source.thumbnail.toDataURL()
+      thumbnail: source.thumbnail.toDataURL(),
+      display_id: source.display_id // Include display_id for matching with displays
     }));
   } catch (error) {
     console.error('Error getting sources:', error);
@@ -224,15 +225,23 @@ ipcMain.handle('open-external', async (event, url) => {
 
 // Handle getting all displays for selection
 ipcMain.handle('get-displays', () => {
-  return screen.getAllDisplays().map(display => ({
+  const displays = screen.getAllDisplays();
+  const primaryDisplay = screen.getPrimaryDisplay();
+  
+  return displays.map(display => ({
     id: display.id,
     bounds: display.bounds,
-    scaleFactor: display.scaleFactor
+    workArea: display.workArea,
+    scaleFactor: display.scaleFactor,
+    size: display.size,
+    workAreaSize: display.workAreaSize,
+    rotation: display.rotation,
+    isPrimary: display.id === primaryDisplay.id
   }));
 });
 
 // Handle opening selection overlay window
-ipcMain.handle('open-selection-window', async (event, displayId) => {
+ipcMain.handle('open-selection-window', async (event, displayId, useFixedSize = true) => {
   return new Promise((resolve) => {
     const displays = screen.getAllDisplays();
     let targetDisplay;
@@ -261,6 +270,7 @@ ipcMain.handle('open-selection-window', async (event, displayId) => {
       resizable: false,
       movable: false,
       fullscreenable: false,
+      show: false, // Don't show immediately
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
         contextIsolation: true,
@@ -268,7 +278,18 @@ ipcMain.handle('open-selection-window', async (event, displayId) => {
       }
     });
 
-    selectionWindow.loadFile('selection.html');
+    // Load the appropriate selection HTML based on mode
+    const selectionFile = useFixedSize ? 'selection-fixed.html' : 'selection.html';
+    selectionWindow.loadFile(selectionFile);
+    
+    // Ensure the window fills the entire display, accounting for scaling
+    selectionWindow.once('ready-to-show', () => {
+      // Set bounds precisely to match the display
+      selectionWindow.setBounds(bounds, false);
+      selectionWindow.show();
+      selectionWindow.focus();
+    });
+    
     selectionWindow.setVisibleOnAllWorkspaces(true);
 
     // Clean up any existing listeners
@@ -278,25 +299,39 @@ ipcMain.handle('open-selection-window', async (event, displayId) => {
     // Listen for selection result
     ipcMain.once('selection-complete', (e, selection) => {
       if (selectionWindow && !selectionWindow.isDestroyed()) {
-        selectionWindow.close();
-        selectionWindow = null;
+        // Use setImmediate to ensure the window closes after the event is handled
+        setImmediate(() => {
+          if (selectionWindow && !selectionWindow.isDestroyed()) {
+            selectionWindow.close();
+          }
+          selectionWindow = null;
+        });
       }
       // Convert local window coordinates to absolute screen coordinates
+      // The selection coordinates are already in physical pixels from the selection window
       const absoluteSelection = {
         x: selection.x + bounds.x,
         y: selection.y + bounds.y,
         width: selection.width,
         height: selection.height,
         displayId: targetDisplay.id,
-        displayBounds: targetDisplay.bounds
+        displayBounds: targetDisplay.bounds,
+        displayScaleFactor: targetDisplay.scaleFactor,
+        // Store the physical size for proper video cropping
+        physicalWidth: Math.round(selection.width * targetDisplay.scaleFactor),
+        physicalHeight: Math.round(selection.height * targetDisplay.scaleFactor)
       };
       resolve(absoluteSelection);
     });
 
     ipcMain.once('selection-cancelled', () => {
       if (selectionWindow && !selectionWindow.isDestroyed()) {
-        selectionWindow.close();
-        selectionWindow = null;
+        setImmediate(() => {
+          if (selectionWindow && !selectionWindow.isDestroyed()) {
+            selectionWindow.close();
+          }
+          selectionWindow = null;
+        });
       }
       resolve(null);
     });

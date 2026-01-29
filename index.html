@@ -1155,7 +1155,7 @@
               <rect x="3" y="3" width="18" height="18" rx="2"/>
               <path d="M12 8v8M8 12h8"/>
             </svg>
-            Draw Selection Area
+            Position Recording Area
           </button>
           <div class="selection-preview" id="selectionPreview"></div>
         `;
@@ -1192,19 +1192,40 @@
       startBtn.disabled = !selectionArea;
 
       if (!selectionArea) {
-        showNotification('Click "Draw Selection Area" to define the region', 'info');
+        showNotification('Click "Position Recording Area" to define the region', 'info');
       }
     }
 
+    function resetSelectAreaButton() {
+      const selectAreaBtn = document.getElementById('selectAreaBtn');
+      selectAreaBtn.disabled = false;
+      selectAreaBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="20" rx="2"/>
+          <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/>
+        </svg>
+        Position Recording Area
+      `;
+    }
+
     async function openSelectionWindow() {
+      const selectAreaBtn = document.getElementById('selectAreaBtn');
+      
+      // Prevent multiple clicks
+      if (selectAreaBtn.disabled) return;
+      
       try {
+        // Disable button during selection process
+        selectAreaBtn.disabled = true;
+        selectAreaBtn.textContent = 'Selecting...';
+        
         // Get available displays
         const displays = await window.electronAPI.getDisplays();
         
         if (displays.length === 1) {
           // Only one display, skip modal and open selection directly
-          showNotification('Draw a selection on your screen...', 'info');
-          const selection = await window.electronAPI.openSelectionWindow(displays[0].id);
+          showNotification('Position the recording area...', 'info');
+          const selection = await window.electronAPI.openSelectionWindow(displays[0].id, true);
           handleSelectionResult(selection);
         } else {
           // Multiple displays, show modal
@@ -1213,6 +1234,7 @@
       } catch (error) {
         console.error('Error opening selection window:', error);
         showNotification('Error opening selection window', 'error');
+        resetSelectAreaButton();
       }
     }
 
@@ -1226,6 +1248,8 @@
         const isPrimary = display.bounds.x === 0 && display.bounds.y === 0;
         const item = document.createElement('div');
         item.className = 'monitor-item';
+        const scalePercent = Math.round(display.scaleFactor * 100);
+        const scaleInfo = display.scaleFactor !== 1 ? ` • ${scalePercent}% scale` : '';
         item.innerHTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -1233,14 +1257,14 @@
             <line x1="12" y1="17" x2="12" y2="21" />
           </svg>
           <div class="monitor-info">
-            <div class="monitor-name">Monitor ${index + 1}${isPrimary ? ' (Primary)' : ''}</div>
+            <div class="monitor-name">Monitor ${index + 1}${isPrimary ? ' (Primary)' : ''}${scaleInfo}</div>
             <div class="monitor-details">${display.bounds.width} × ${display.bounds.height}</div>
           </div>
         `;
         item.addEventListener('click', async () => {
           modal.classList.remove('show');
-          showNotification('Draw a selection on your screen...', 'info');
-          const selection = await window.electronAPI.openSelectionWindow(display.id);
+          showNotification('Position the recording area...', 'info');
+          const selection = await window.electronAPI.openSelectionWindow(display.id, true);
           handleSelectionResult(selection);
         });
         monitorList.appendChild(item);
@@ -1252,15 +1276,20 @@
     // Handle cancel button in modal
     document.getElementById('cancelMonitorBtn').addEventListener('click', () => {
       document.getElementById('monitorModal').classList.remove('show');
+      resetSelectAreaButton();
     });
 
     function handleSelectionResult(selection) {
+      // Always re-enable the button after selection process
+      resetSelectAreaButton();
+      
       if (selection) {
         selectionArea = selection;
 
         // Update the preview
         const previewEl = document.getElementById('selectionPreview');
-        previewEl.textContent = `Region: ${selection.width} × ${selection.height} at (${selection.x}, ${selection.y})`;
+        const scaleInfo = selection.displayScaleFactor !== 1 ? ` (${Math.round(selection.displayScaleFactor * 100)}% scale)` : '';
+        previewEl.textContent = `Region: ${selection.width} × ${selection.height}${scaleInfo} at (${selection.x}, ${selection.y})`;
         previewEl.classList.add('has-selection');
 
         startBtn.disabled = false;
@@ -1288,13 +1317,34 @@
         // For selection recording, we need to get the screen source that contains the selection
         if (selectedSource.id === 'selection') {
           const sources = await window.electronAPI.getSources();
+          
           if (sources.length > 0) {
             // Try to find the screen source for the specific display
             let matchingSource = null;
+            
             if (selectionArea.displayId) {
-              // Look for a screen source that matches the display
-              matchingSource = sources.find(s => s.display_id === String(selectionArea.displayId));
+              // Try multiple matching strategies
+              // 1. Try exact display_id match (as string)
+              matchingSource = sources.find(s => s.display_id && String(s.display_id) === String(selectionArea.displayId));
+              
+              // 2. If no match, try to match by screen index in the name
+              if (!matchingSource && sources.length > 1) {
+                // Get all displays to find the index
+                const displays = await window.electronAPI.getDisplays();
+                const displayIndex = displays.findIndex(d => d.id === selectionArea.displayId);
+                
+                if (displayIndex >= 0 && displayIndex < sources.length) {
+                  matchingSource = sources[displayIndex];
+                }
+              }
+              
+              // 3. If still no match, try to find by name matching
+              if (!matchingSource) {
+                // Screen sources typically named "Screen 1", "Screen 2", etc.
+                matchingSource = sources.find(s => s.name && s.name.toLowerCase().includes('screen'));
+              }
             }
+            
             // Fall back to first screen source if no match
             sourceId = matchingSource ? matchingSource.id : sources[0].id;
           } else {
@@ -1337,56 +1387,136 @@
           const videoTrack = mediaStream.getVideoTracks()[0];
           const settings = videoTrack.getSettings();
 
+          console.log('=== Selection Recording Debug ===');
+          console.log('Video settings:', settings);
+          console.log('Selection area:', selectionArea);
+          console.log('Video actual size:', {width: settings.width, height: settings.height});
+
           // Create a video element to capture the stream
           const videoEl = document.createElement('video');
           videoEl.srcObject = new MediaStream([videoTrack]);
           videoEl.muted = true;
+          
+          // Wait for video to be ready
+          await new Promise((resolve) => {
+            videoEl.onloadedmetadata = () => {
+              console.log('Video metadata loaded:', {
+                videoWidth: videoEl.videoWidth,
+                videoHeight: videoEl.videoHeight,
+                readyState: videoEl.readyState
+              });
+              resolve();
+            };
+          });
+          
           await videoEl.play();
+          console.log('Video playing:', videoEl.paused === false);
 
-          // Create canvas for cropping
+          // Get display information for proper scaling
+          const displayScaleFactor = selectionArea.displayScaleFactor || 1;
+          const displayBounds = selectionArea.displayBounds;
+          
+          console.log('Display bounds:', displayBounds);
+          console.log('Display scale factor:', displayScaleFactor);
+          
+          // Canvas dimensions should match the logical pixels from selection
           const canvas = document.createElement('canvas');
           canvas.width = selectionArea.width;
           canvas.height = selectionArea.height;
           const ctx = canvas.getContext('2d');
 
-          // Calculate scale factor (screen coordinates vs video resolution)
-          const scaleX = settings.width / window.screen.width;
-          const scaleY = settings.height / window.screen.height;
+          // IMPORTANT: Use the actual video element dimensions, not settings
+          // The settings can report a different resolution than what's actually rendered
+          const actualVideoWidth = videoEl.videoWidth;
+          const actualVideoHeight = videoEl.videoHeight;
+          
+          console.log('Actual video element size:', {width: actualVideoWidth, height: actualVideoHeight});
+
+          // The video capture resolution vs display logical resolution
+          const displayLogicalWidth = displayBounds.width;
+          const displayLogicalHeight = displayBounds.height;
+          
+          // Try to determine the actual capture scale using actual video dimensions
+          const videoToLogicalScaleX = actualVideoWidth / displayLogicalWidth;
+          const videoToLogicalScaleY = actualVideoHeight / displayLogicalHeight;
+          
+          console.log('Video to logical scale ratios - X:', videoToLogicalScaleX, 'Y:', videoToLogicalScaleY);
+          
+          // Use the X scale as primary (width is usually more reliable)
+          const actualScale = videoToLogicalScaleX;
+          
+          // Selection coordinates relative to display origin (in logical pixels)
+          const relativeX = selectionArea.x - displayBounds.x;
+          const relativeY = selectionArea.y - displayBounds.y;
+          
+          // Convert to video pixels using the actual scale
+          const cropX = relativeX * actualScale;
+          const cropY = relativeY * actualScale;
+          const cropWidth = selectionArea.width * actualScale;
+          const cropHeight = selectionArea.height * actualScale;
+
+          console.log('Using scale factor:', actualScale);
+          console.log('Relative selection position (logical) - X:', relativeX, 'Y:', relativeY);
+          console.log('Crop source rect (video pixels):', {
+            x: cropX,
+            y: cropY,
+            width: cropWidth,
+            height: cropHeight
+          });
+          console.log('Canvas output size:', { width: canvas.width, height: canvas.height });
 
           // Draw cropped region to canvas at 30fps
           const drawFrame = () => {
             if (!isRecording && !isPaused) return;
-            ctx.drawImage(
-              videoEl,
-              selectionArea.x * scaleX,
-              selectionArea.y * scaleY,
-              selectionArea.width * scaleX,
-              selectionArea.height * scaleY,
-              0,
-              0,
-              selectionArea.width,
-              selectionArea.height
-            );
+            try {
+              ctx.drawImage(
+                videoEl,
+                cropX,
+                cropY,
+                cropWidth,
+                cropHeight,
+                0,
+                0,
+                selectionArea.width,
+                selectionArea.height
+              );
+            } catch (err) {
+              console.error('Error drawing frame:', err);
+              console.log('Video element state:', {
+                readyState: videoEl.readyState,
+                paused: videoEl.paused,
+                ended: videoEl.ended,
+                videoWidth: videoEl.videoWidth,
+                videoHeight: videoEl.videoHeight
+              });
+            }
             if (isRecording || isPaused) {
               requestAnimationFrame(drawFrame);
             }
           };
 
+          console.log('Starting frame drawing...');
           // Start drawing
           isRecording = true; // Set early so drawFrame loop works
           drawFrame();
 
           // Get canvas stream
           const canvasStream = canvas.captureStream(30);
+          console.log('Canvas stream created:', {
+            hasVideoTracks: canvasStream.getVideoTracks().length > 0,
+            videoTrackSettings: canvasStream.getVideoTracks()[0]?.getSettings()
+          });
 
           // Add audio track if exists
           const audioTracks = mediaStream.getAudioTracks();
           if (audioTracks.length > 0) {
             canvasStream.addTrack(audioTracks[0]);
+            console.log('Audio track added to canvas stream');
           }
 
           // Use the cropped stream for recording
           mediaStream = canvasStream;
+          console.log('Using canvas stream for recording and preview');
 
           // Store video element for cleanup
           mediaStream._videoEl = videoEl;
