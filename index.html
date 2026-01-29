@@ -1387,11 +1387,6 @@
           const videoTrack = mediaStream.getVideoTracks()[0];
           const settings = videoTrack.getSettings();
 
-          console.log('=== Selection Recording Debug ===');
-          console.log('Video settings:', settings);
-          console.log('Selection area:', selectionArea);
-          console.log('Video actual size:', {width: settings.width, height: settings.height});
-
           // Create a video element to capture the stream
           const videoEl = document.createElement('video');
           videoEl.srcObject = new MediaStream([videoTrack]);
@@ -1399,51 +1394,39 @@
           
           // Wait for video to be ready
           await new Promise((resolve) => {
-            videoEl.onloadedmetadata = () => {
-              console.log('Video metadata loaded:', {
-                videoWidth: videoEl.videoWidth,
-                videoHeight: videoEl.videoHeight,
-                readyState: videoEl.readyState
-              });
-              resolve();
-            };
+            videoEl.onloadedmetadata = () => resolve();
           });
           
           await videoEl.play();
-          console.log('Video playing:', videoEl.paused === false);
 
           // Get display information for proper scaling
           const displayScaleFactor = selectionArea.displayScaleFactor || 1;
           const displayBounds = selectionArea.displayBounds;
           
-          console.log('Display bounds:', displayBounds);
-          console.log('Display scale factor:', displayScaleFactor);
-          
           // Canvas dimensions should match the logical pixels from selection
           const canvas = document.createElement('canvas');
           canvas.width = selectionArea.width;
           canvas.height = selectionArea.height;
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext('2d', { 
+            alpha: false,
+            desynchronized: true 
+          });
+          
+          // Set canvas rendering quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
 
           // IMPORTANT: Use the actual video element dimensions, not settings
           // The settings can report a different resolution than what's actually rendered
           const actualVideoWidth = videoEl.videoWidth;
           const actualVideoHeight = videoEl.videoHeight;
-          
-          console.log('Actual video element size:', {width: actualVideoWidth, height: actualVideoHeight});
 
           // The video capture resolution vs display logical resolution
           const displayLogicalWidth = displayBounds.width;
           const displayLogicalHeight = displayBounds.height;
           
-          // Try to determine the actual capture scale using actual video dimensions
-          const videoToLogicalScaleX = actualVideoWidth / displayLogicalWidth;
-          const videoToLogicalScaleY = actualVideoHeight / displayLogicalHeight;
-          
-          console.log('Video to logical scale ratios - X:', videoToLogicalScaleX, 'Y:', videoToLogicalScaleY);
-          
-          // Use the X scale as primary (width is usually more reliable)
-          const actualScale = videoToLogicalScaleX;
+          // Calculate scale using actual video dimensions
+          const actualScale = actualVideoWidth / displayLogicalWidth;
           
           // Selection coordinates relative to display origin (in logical pixels)
           const relativeX = selectionArea.x - displayBounds.x;
@@ -1454,16 +1437,6 @@
           const cropY = relativeY * actualScale;
           const cropWidth = selectionArea.width * actualScale;
           const cropHeight = selectionArea.height * actualScale;
-
-          console.log('Using scale factor:', actualScale);
-          console.log('Relative selection position (logical) - X:', relativeX, 'Y:', relativeY);
-          console.log('Crop source rect (video pixels):', {
-            x: cropX,
-            y: cropY,
-            width: cropWidth,
-            height: cropHeight
-          });
-          console.log('Canvas output size:', { width: canvas.width, height: canvas.height });
 
           // Draw cropped region to canvas at 30fps
           const drawFrame = () => {
@@ -1482,41 +1455,27 @@
               );
             } catch (err) {
               console.error('Error drawing frame:', err);
-              console.log('Video element state:', {
-                readyState: videoEl.readyState,
-                paused: videoEl.paused,
-                ended: videoEl.ended,
-                videoWidth: videoEl.videoWidth,
-                videoHeight: videoEl.videoHeight
-              });
             }
             if (isRecording || isPaused) {
               requestAnimationFrame(drawFrame);
             }
           };
 
-          console.log('Starting frame drawing...');
           // Start drawing
           isRecording = true; // Set early so drawFrame loop works
           drawFrame();
 
           // Get canvas stream
           const canvasStream = canvas.captureStream(30);
-          console.log('Canvas stream created:', {
-            hasVideoTracks: canvasStream.getVideoTracks().length > 0,
-            videoTrackSettings: canvasStream.getVideoTracks()[0]?.getSettings()
-          });
 
           // Add audio track if exists
           const audioTracks = mediaStream.getAudioTracks();
           if (audioTracks.length > 0) {
             canvasStream.addTrack(audioTracks[0]);
-            console.log('Audio track added to canvas stream');
           }
 
           // Use the cropped stream for recording
           mediaStream = canvasStream;
-          console.log('Using canvas stream for recording and preview');
 
           // Store video element for cleanup
           mediaStream._videoEl = videoEl;
