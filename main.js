@@ -18,9 +18,9 @@ let selectionWindow = null;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
-    height: 720,
+    height: 760,
     minWidth: 800,
-    minHeight: 650,
+    minHeight: 700,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
