@@ -31,8 +31,9 @@
       "preload.js",
       "index.html",
       "selection.html",
+      "selection-fixed.html",
       "package.json",
-      "icon.png"
+      "build/icons/icon.png"
     ],
     "win": {
       "target": [

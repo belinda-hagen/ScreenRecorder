@@ -26,7 +26,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false
     },
-    icon: path.join(__dirname, 'icon.png'),
+    icon: path.join(__dirname, 'build', 'icons', 'icon.ico'),
     title: 'Screen Recorder',
     resizable: true,
     autoHideMenuBar: true,
