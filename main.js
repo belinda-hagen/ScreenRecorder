@@ -31,8 +31,8 @@ function createWindow() {
     resizable: true,
     autoHideMenuBar: true,
     frame: false,
-    transparent: true,
-    backgroundColor: '#ffffff00'
+    transparent: false,
+    backgroundColor: '#0a0e27'
   });
 
   mainWindow.loadFile('index.html');
