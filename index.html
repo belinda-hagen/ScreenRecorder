@@ -134,13 +134,16 @@
       </div>
 
       <div class="controls">
+        <!-- Default state: Start Recording button -->
         <button class="btn btn-primary" id="startBtn" disabled>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <circle cx="12" cy="12" r="6" />
           </svg>
           Start Recording
         </button>
-        <div class="btn-row">
+
+        <!-- Recording state: Pause and Stop buttons (hidden by default) -->
+        <div class="btn-row recording-controls" id="recordingControls" style="display: none;">
           <button class="btn btn-secondary" id="pauseBtn" disabled>
             <svg viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16" />
@@ -155,6 +158,8 @@
             Stop
           </button>
         </div>
+
+        <!-- Always visible: Reset button -->
         <button class="btn btn-ghost" id="resetBtn" disabled>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -196,6 +201,7 @@
     const pauseBtn = document.getElementById('pauseBtn');
     const stopBtn = document.getElementById('stopBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const recordingControls = document.getElementById('recordingControls');
     const preview = document.getElementById('preview');
     const previewOverlay = document.getElementById('previewOverlay');
     const notification = document.getElementById('notification');
@@ -687,6 +693,7 @@
 
         updateStatus('Recording');
         startBtn.style.display = 'none';
+        recordingControls.style.display = 'flex';
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
         resetBtn.disabled = true;
@@ -747,6 +754,7 @@
 
       updateStatus('Stopped');
       startBtn.style.display = 'flex';
+      recordingControls.style.display = 'none';
       startBtn.disabled = false;
       pauseBtn.disabled = true;
       stopBtn.disabled = true;
@@ -779,6 +787,8 @@
       }
 
       updateStatus('Ready');
+      startBtn.style.display = 'flex';
+      recordingControls.style.display = 'none';
       startBtn.disabled = true;
       resetBtn.disabled = true;
 
