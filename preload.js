@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeWindow: () => ipcRenderer.send('window-close'),
   // Selection recording - supports multiple displays and scaling
   getDisplays: () => ipcRenderer.invoke('get-displays'),
-  openSelectionWindow: (displayId, useFixedSize) => ipcRenderer.invoke('open-selection-window', displayId, useFixedSize),
+  openSelectionWindow: (displayId) => ipcRenderer.invoke('open-selection-window', displayId),
   sendSelectionComplete: (selection) => ipcRenderer.send('selection-complete', selection),
   sendSelectionCancelled: () => ipcRenderer.send('selection-cancelled')
 });

@@ -26,7 +26,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false
     },
-    icon: path.join(__dirname, 'icon.png'),
+    icon: path.join(__dirname, 'assets', 'icons', 'icon.png'),
     title: 'Screen Recorder',
     resizable: true,
     autoHideMenuBar: true,
@@ -241,7 +241,7 @@ ipcMain.handle('get-displays', () => {
 });
 
 // Handle opening selection overlay window
-ipcMain.handle('open-selection-window', async (event, displayId, useFixedSize = true) => {
+ipcMain.handle('open-selection-window', async (event, displayId) => {
   return new Promise((resolve) => {
     const displays = screen.getAllDisplays();
     let targetDisplay;
@@ -278,9 +278,8 @@ ipcMain.handle('open-selection-window', async (event, displayId, useFixedSize = 
       }
     });
 
-    // Load the appropriate selection HTML based on mode
-    const selectionFile = useFixedSize ? 'selection-fixed.html' : 'selection.html';
-    selectionWindow.loadFile(selectionFile);
+    // Load the selection HTML
+    selectionWindow.loadFile('selection-fixed.html');
     
     // Ensure the window fills the entire display, accounting for scaling
     selectionWindow.once('ready-to-show', () => {
