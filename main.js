@@ -284,9 +284,14 @@ ipcMain.handle('open-selection-window', async (event, displayId, useFixedSize = 
     
     // Ensure the window fills the entire display, accounting for scaling
     selectionWindow.once('ready-to-show', () => {
-      // Set bounds precisely to match the display
-      selectionWindow.setBounds(bounds, false);
+      // On Linux, we need to show first, then set position to ensure proper multi-monitor placement
       selectionWindow.show();
+      
+      // Force position after show - Linux window managers sometimes ignore initial position
+      // Using setPosition after show() is more reliable on Linux with multiple monitors
+      selectionWindow.setPosition(bounds.x, bounds.y, false);
+      selectionWindow.setSize(bounds.width, bounds.height, false);
+      
       selectionWindow.focus();
     });
     

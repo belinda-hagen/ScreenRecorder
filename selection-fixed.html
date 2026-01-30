@@ -112,31 +112,82 @@
 
         .corner {
             position: absolute;
-            width: 12px;
-            height: 12px;
+            width: 16px;
+            height: 16px;
             background: #667eea;
             border-radius: 50%;
             border: 2px solid #fff;
+            pointer-events: auto;
+            z-index: 10;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .corner:hover {
+            transform: scale(1.3);
+            background: #a78bfa;
         }
 
         .corner.tl {
-            top: -6px;
-            left: -6px;
+            top: -8px;
+            left: -8px;
+            cursor: nwse-resize;
         }
 
         .corner.tr {
-            top: -6px;
-            right: -6px;
+            top: -8px;
+            right: -8px;
+            cursor: nesw-resize;
         }
 
         .corner.bl {
-            bottom: -6px;
-            left: -6px;
+            bottom: -8px;
+            left: -8px;
+            cursor: nesw-resize;
         }
 
         .corner.br {
-            bottom: -6px;
-            right: -6px;
+            bottom: -8px;
+            right: -8px;
+            cursor: nwse-resize;
+        }
+
+        .edge {
+            position: absolute;
+            background: transparent;
+            pointer-events: auto;
+            z-index: 5;
+        }
+
+        .edge.top,
+        .edge.bottom {
+            height: 8px;
+            left: 16px;
+            right: 16px;
+            cursor: ns-resize;
+        }
+
+        .edge.top {
+            top: -4px;
+        }
+
+        .edge.bottom {
+            bottom: -4px;
+        }
+
+        .edge.left,
+        .edge.right {
+            width: 8px;
+            top: 16px;
+            bottom: 16px;
+            cursor: ew-resize;
+        }
+
+        .edge.left {
+            left: -4px;
+        }
+
+        .edge.right {
+            right: -4px;
         }
 
         .center-cross {
@@ -294,16 +345,20 @@
 
     <div class="instructions" id="instructions">
         <h2>Position Recording Area</h2>
-        <p>Drag the blue rectangle to position it<br>Adjust size on the right panel</p>
+        <p>Drag the blue rectangle to position it<br>Drag corners/edges to resize</p>
         <p class="tip">Press Enter to confirm • Escape to cancel</p>
         <p class="tip" id="scaleInfo" style="margin-top: 8px; color: #fbbf24;"></p>
     </div>
 
     <div class="selection-box" id="selectionBox">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
+        <div class="corner tl" data-resize="tl"></div>
+        <div class="corner tr" data-resize="tr"></div>
+        <div class="corner bl" data-resize="bl"></div>
+        <div class="corner br" data-resize="br"></div>
+        <div class="edge top" data-resize="t"></div>
+        <div class="edge bottom" data-resize="b"></div>
+        <div class="edge left" data-resize="l"></div>
+        <div class="edge right" data-resize="r"></div>
         <div class="center-cross"></div>
         <div class="selection-info" id="selectionInfo">800 × 600</div>
     </div>
@@ -346,12 +401,21 @@
         const heightInput = document.getElementById('heightInput');
 
         let isDragging = false;
+        let isResizing = false;
+        let resizeHandle = null;
         let dragStartX = 0;
         let dragStartY = 0;
         let boxStartX = 0;
         let boxStartY = 0;
+        let boxStartWidth = 0;
+        let boxStartHeight = 0;
         let selectionWidth = 800;
         let selectionHeight = 600;
+        let selectionX = 0;
+        let selectionY = 0;
+
+        const MIN_WIDTH = 100;
+        const MIN_HEIGHT = 100;
 
         // Detect and display scaling information
         const devicePixelRatio = window.devicePixelRatio || 1;
@@ -361,9 +425,9 @@
 
         // Center the selection box initially
         function centerSelectionBox() {
-            const x = (window.innerWidth - selectionWidth) / 2;
-            const y = (window.innerHeight - selectionHeight) / 2;
-            updateSelectionBox(x, y, selectionWidth, selectionHeight);
+            selectionX = (window.innerWidth - selectionWidth) / 2;
+            selectionY = (window.innerHeight - selectionHeight) / 2;
+            updateSelectionBox(selectionX, selectionY, selectionWidth, selectionHeight);
         }
 
         function updateSelectionBox(x, y, width, height) {
@@ -371,11 +435,20 @@
             x = Math.max(0, Math.min(x, window.innerWidth - width));
             y = Math.max(0, Math.min(y, window.innerHeight - height));
 
+            selectionX = x;
+            selectionY = y;
+            selectionWidth = width;
+            selectionHeight = height;
+
             selectionBox.style.left = x + 'px';
             selectionBox.style.top = y + 'px';
             selectionBox.style.width = width + 'px';
             selectionBox.style.height = height + 'px';
             selectionInfo.textContent = `${Math.round(width)} × ${Math.round(height)}`;
+
+            // Update input fields
+            widthInput.value = Math.round(width);
+            heightInput.value = Math.round(height);
         }
 
         function getSelection() {
@@ -395,54 +468,146 @@
             overlay.focus();
         }, 2000);
 
-        // Dragging functionality
+        // Resize functionality via corners and edges
+        document.querySelectorAll('[data-resize]').forEach(handle => {
+            handle.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                isResizing = true;
+                resizeHandle = handle.dataset.resize;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                boxStartX = selectionX;
+                boxStartY = selectionY;
+                boxStartWidth = selectionWidth;
+                boxStartHeight = selectionHeight;
+
+                selectionBox.classList.add('dragging');
+            });
+        });
+
+        // Dragging functionality (only on the box itself, not handles)
         selectionBox.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
+            // Don't drag if clicking on a resize handle
+            if (e.target.dataset.resize) return;
             e.preventDefault();
             e.stopPropagation();
 
             isDragging = true;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
-            const rect = selectionBox.getBoundingClientRect();
-            boxStartX = rect.left;
-            boxStartY = rect.top;
+            boxStartX = selectionX;
+            boxStartY = selectionY;
 
             selectionBox.classList.add('dragging');
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
+            if (isResizing) {
+                e.preventDefault();
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
 
-            const deltaX = e.clientX - dragStartX;
-            const deltaY = e.clientY - dragStartY;
-            const newX = boxStartX + deltaX;
-            const newY = boxStartY + deltaY;
+                let newX = boxStartX;
+                let newY = boxStartY;
+                let newWidth = boxStartWidth;
+                let newHeight = boxStartHeight;
 
-            updateSelectionBox(newX, newY, selectionWidth, selectionHeight);
+                // Handle resize based on which handle is being dragged
+                switch (resizeHandle) {
+                    case 'tl': // Top-left
+                        newX = boxStartX + deltaX;
+                        newY = boxStartY + deltaY;
+                        newWidth = boxStartWidth - deltaX;
+                        newHeight = boxStartHeight - deltaY;
+                        break;
+                    case 'tr': // Top-right
+                        newY = boxStartY + deltaY;
+                        newWidth = boxStartWidth + deltaX;
+                        newHeight = boxStartHeight - deltaY;
+                        break;
+                    case 'bl': // Bottom-left
+                        newX = boxStartX + deltaX;
+                        newWidth = boxStartWidth - deltaX;
+                        newHeight = boxStartHeight + deltaY;
+                        break;
+                    case 'br': // Bottom-right
+                        newWidth = boxStartWidth + deltaX;
+                        newHeight = boxStartHeight + deltaY;
+                        break;
+                    case 't': // Top edge
+                        newY = boxStartY + deltaY;
+                        newHeight = boxStartHeight - deltaY;
+                        break;
+                    case 'b': // Bottom edge
+                        newHeight = boxStartHeight + deltaY;
+                        break;
+                    case 'l': // Left edge
+                        newX = boxStartX + deltaX;
+                        newWidth = boxStartWidth - deltaX;
+                        break;
+                    case 'r': // Right edge
+                        newWidth = boxStartWidth + deltaX;
+                        break;
+                }
+
+                // Enforce minimum size and prevent going off-screen
+                if (newWidth < MIN_WIDTH) {
+                    if (resizeHandle.includes('l')) {
+                        newX = boxStartX + boxStartWidth - MIN_WIDTH;
+                    }
+                    newWidth = MIN_WIDTH;
+                }
+                if (newHeight < MIN_HEIGHT) {
+                    if (resizeHandle.includes('t')) {
+                        newY = boxStartY + boxStartHeight - MIN_HEIGHT;
+                    }
+                    newHeight = MIN_HEIGHT;
+                }
+
+                // Keep within screen bounds
+                newX = Math.max(0, newX);
+                newY = Math.max(0, newY);
+                if (newX + newWidth > window.innerWidth) {
+                    newWidth = window.innerWidth - newX;
+                }
+                if (newY + newHeight > window.innerHeight) {
+                    newHeight = window.innerHeight - newY;
+                }
+
+                updateSelectionBox(newX, newY, newWidth, newHeight);
+            } else if (isDragging) {
+                e.preventDefault();
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                const newX = boxStartX + deltaX;
+                const newY = boxStartY + deltaY;
+
+                updateSelectionBox(newX, newY, selectionWidth, selectionHeight);
+            }
         });
 
         window.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
+            if (!isDragging && !isResizing) return;
             e.preventDefault();
             isDragging = false;
+            isResizing = false;
+            resizeHandle = null;
             selectionBox.classList.remove('dragging');
         });
 
         // Size input handlers
         widthInput.addEventListener('input', () => {
-            selectionWidth = Math.max(320, parseInt(widthInput.value) || 800);
-            widthInput.value = selectionWidth;
-            const rect = selectionBox.getBoundingClientRect();
-            updateSelectionBox(rect.left, rect.top, selectionWidth, selectionHeight);
+            const newWidth = Math.max(MIN_WIDTH, parseInt(widthInput.value) || 800);
+            updateSelectionBox(selectionX, selectionY, newWidth, selectionHeight);
         });
 
         heightInput.addEventListener('input', () => {
-            selectionHeight = Math.max(240, parseInt(heightInput.value) || 600);
-            heightInput.value = selectionHeight;
-            const rect = selectionBox.getBoundingClientRect();
-            updateSelectionBox(rect.left, rect.top, selectionWidth, selectionHeight);
+            const newHeight = Math.max(MIN_HEIGHT, parseInt(heightInput.value) || 600);
+            updateSelectionBox(selectionX, selectionY, selectionWidth, newHeight);
         });
 
         // Preset buttons
