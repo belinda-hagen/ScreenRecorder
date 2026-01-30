@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Position Recording Area</title>
+    <title>Select Recording Area</title>
     <style>
         * {
             margin: 0;
@@ -18,7 +18,7 @@
             height: 100vh;
             overflow: hidden;
             background: rgba(0, 0, 0, 0.3);
-            cursor: move;
+            cursor: crosshair;
             outline: none;
             opacity: 1;
             transition: opacity 0.2s ease;
@@ -83,111 +83,78 @@
 
         .selection-box {
             position: fixed;
-            border: 3px solid #667eea;
-            background: rgba(102, 126, 234, 0.15);
-            pointer-events: auto;
+            border: 2px dashed #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            pointer-events: none;
+            display: none;
             z-index: 100;
-            box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.5);
-            cursor: move;
         }
 
-        .selection-box.dragging {
-            border-color: #a78bfa;
-            background: rgba(167, 139, 250, 0.2);
+        .selection-box.active {
+            display: block;
         }
 
         .selection-info {
             position: absolute;
-            top: -32px;
+            bottom: -28px;
             left: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.8);
             color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-family: 'Consolas', 'SF Mono', monospace;
             font-size: 12px;
             white-space: nowrap;
-            border: 1px solid #667eea;
         }
 
         .corner {
             position: absolute;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             background: #667eea;
-            border-radius: 50%;
-            border: 2px solid #fff;
+            border-radius: 2px;
         }
 
         .corner.tl {
-            top: -6px;
-            left: -6px;
+            top: -5px;
+            left: -5px;
         }
 
         .corner.tr {
-            top: -6px;
-            right: -6px;
+            top: -5px;
+            right: -5px;
         }
 
         .corner.bl {
-            bottom: -6px;
-            left: -6px;
+            bottom: -5px;
+            left: -5px;
         }
 
         .corner.br {
-            bottom: -6px;
-            right: -6px;
-        }
-
-        .center-cross {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        .center-cross::before,
-        .center-cross::after {
-            content: '';
-            position: absolute;
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .center-cross::before {
-            width: 20px;
-            height: 2px;
-            left: -10px;
-            top: -1px;
-        }
-
-        .center-cross::after {
-            width: 2px;
-            height: 20px;
-            left: -1px;
-            top: -10px;
+            bottom: -5px;
+            right: -5px;
         }
 
         .confirm-buttons {
             position: fixed;
-            display: flex;
+            display: none;
             gap: 10px;
             z-index: 1001;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
+        }
+
+        .confirm-buttons.visible {
+            display: flex;
         }
 
         .confirm-btn {
-            padding: 12px 24px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             font-family: 'Segoe UI', -apple-system, sans-serif;
             transition: all 0.2s ease;
-            pointer-events: auto;
         }
 
         .confirm-btn.confirm {
@@ -196,8 +163,8 @@
         }
 
         .confirm-btn.confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .confirm-btn.cancel {
@@ -209,83 +176,6 @@
         .confirm-btn.cancel:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-
-        .size-input-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            z-index: 1000;
-            pointer-events: auto;
-        }
-
-        .size-input-panel h3 {
-            color: #a78bfa;
-            font-size: 14px;
-            margin-bottom: 12px;
-            font-family: 'Segoe UI', -apple-system, sans-serif;
-        }
-
-        .size-inputs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .input-group label {
-            color: #9ca3af;
-            font-size: 11px;
-            font-family: 'Segoe UI', -apple-system, sans-serif;
-        }
-
-        .input-group input {
-            width: 80px;
-            padding: 6px 8px;
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(118, 75, 162, 0.3);
-            border-radius: 6px;
-            color: #fff;
-            font-size: 13px;
-            font-family: 'Consolas', 'SF Mono', monospace;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-        }
-
-        .preset-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .preset-btn {
-            padding: 4px 8px;
-            background: rgba(102, 126, 234, 0.15);
-            border: 1px solid rgba(118, 75, 162, 0.3);
-            border-radius: 4px;
-            color: #a78bfa;
-            font-size: 10px;
-            cursor: pointer;
-            font-family: 'Segoe UI', -apple-system, sans-serif;
-            transition: all 0.2s ease;
-        }
-
-        .preset-btn:hover {
-            background: rgba(102, 126, 234, 0.25);
-            border-color: #667eea;
-        }
     </style>
 </head>
 
@@ -293,9 +183,9 @@
     <div class="overlay" id="overlay" tabindex="0"></div>
 
     <div class="instructions" id="instructions">
-        <h2>Position Recording Area</h2>
-        <p>Drag the blue rectangle to position it<br>Adjust size on the right panel</p>
-        <p class="tip">Press Enter to confirm • Escape to cancel</p>
+        <h2>Draw Selection Area</h2>
+        <p>Click and drag to select the area to record.<br>Press <strong>Escape</strong> to cancel.</p>
+        <p class="tip">Press Enter to confirm after drawing</p>
         <p class="tip" id="scaleInfo" style="margin-top: 8px; color: #fbbf24;"></p>
     </div>
 
@@ -304,32 +194,11 @@
         <div class="corner tr"></div>
         <div class="corner bl"></div>
         <div class="corner br"></div>
-        <div class="center-cross"></div>
-        <div class="selection-info" id="selectionInfo">800 × 600</div>
-    </div>
-
-    <div class="size-input-panel">
-        <h3>Recording Area Size</h3>
-        <div class="size-inputs">
-            <div class="input-group">
-                <label>Width</label>
-                <input type="number" id="widthInput" value="800" min="320" step="10">
-            </div>
-            <div class="input-group">
-                <label>Height</label>
-                <input type="number" id="heightInput" value="600" min="240" step="10">
-            </div>
-        </div>
-        <div class="preset-buttons">
-            <button class="preset-btn" data-width="1920" data-height="1080">1920×1080</button>
-            <button class="preset-btn" data-width="1280" data-height="720">1280×720</button>
-            <button class="preset-btn" data-width="800" data-height="600">800×600</button>
-            <button class="preset-btn" data-width="640" data-height="480">640×480</button>
-        </div>
+        <div class="selection-info" id="selectionInfo">0 × 0</div>
     </div>
 
     <div class="confirm-buttons" id="confirmButtons">
-        <button class="confirm-btn confirm" id="confirmBtn">Confirm Position</button>
+        <button class="confirm-btn confirm" id="confirmBtn">Confirm Selection</button>
         <button class="confirm-btn cancel" id="cancelBtn">Cancel</button>
     </div>
 
@@ -342,16 +211,11 @@
         const confirmBtn = document.getElementById('confirmBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const scaleInfo = document.getElementById('scaleInfo');
-        const widthInput = document.getElementById('widthInput');
-        const heightInput = document.getElementById('heightInput');
 
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let boxStartX = 0;
-        let boxStartY = 0;
-        let selectionWidth = 800;
-        let selectionHeight = 600;
+        let isDrawing = false;
+        let startX = 0;
+        let startY = 0;
+        let currentSelection = null;
 
         // Detect and display scaling information
         const devicePixelRatio = window.devicePixelRatio || 1;
@@ -359,18 +223,12 @@
             scaleInfo.textContent = `Display scaling: ${Math.round(devicePixelRatio * 100)}% detected`;
         }
 
-        // Center the selection box initially
-        function centerSelectionBox() {
-            const x = (window.innerWidth - selectionWidth) / 2;
-            const y = (window.innerHeight - selectionHeight) / 2;
-            updateSelectionBox(x, y, selectionWidth, selectionHeight);
-        }
+        // Ensure window has focus for keyboard events
+        setTimeout(() => {
+            overlay.focus();
+        }, 100);
 
         function updateSelectionBox(x, y, width, height) {
-            // Keep within bounds
-            x = Math.max(0, Math.min(x, window.innerWidth - width));
-            y = Math.max(0, Math.min(y, window.innerHeight - height));
-
             selectionBox.style.left = x + 'px';
             selectionBox.style.top = y + 'px';
             selectionBox.style.width = width + 'px';
@@ -378,97 +236,110 @@
             selectionInfo.textContent = `${Math.round(width)} × ${Math.round(height)}`;
         }
 
-        function getSelection() {
+        function positionConfirmButtons() {
             const rect = selectionBox.getBoundingClientRect();
-            return {
-                x: Math.round(rect.left),
-                y: Math.round(rect.top),
-                width: Math.round(rect.width),
-                height: Math.round(rect.height)
-            };
+            const buttonHeight = 40;
+            const margin = 10;
+
+            let top = rect.bottom + margin;
+            let left = rect.left + (rect.width / 2);
+
+            // If buttons would go off screen bottom, position above selection
+            if (top + buttonHeight > window.innerHeight) {
+                top = rect.top - buttonHeight - margin;
+            }
+
+            // Keep buttons on screen horizontally
+            const buttonsWidth = 220;
+            left = Math.max(buttonsWidth / 2, Math.min(left, window.innerWidth - buttonsWidth / 2));
+
+            confirmButtons.style.top = top + 'px';
+            confirmButtons.style.left = left + 'px';
+            confirmButtons.style.transform = 'translateX(-50%)';
         }
 
-        // Initialize
-        centerSelectionBox();
-        setTimeout(() => {
-            instructions.classList.add('hidden');
-            overlay.focus();
-        }, 2000);
-
-        // Dragging functionality
-        selectionBox.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return;
+        overlay.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Only left click
+            
             e.preventDefault();
             e.stopPropagation();
 
-            isDragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            const rect = selectionBox.getBoundingClientRect();
-            boxStartX = rect.left;
-            boxStartY = rect.top;
+            isDrawing = true;
+            startX = e.clientX;
+            startY = e.clientY;
 
-            selectionBox.classList.add('dragging');
+            instructions.classList.add('hidden');
+            confirmButtons.classList.remove('visible');
+            selectionBox.classList.add('active');
+
+            updateSelectionBox(startX, startY, 0, 0);
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
+            if (!isDrawing) return;
+
             e.preventDefault();
 
-            const deltaX = e.clientX - dragStartX;
-            const deltaY = e.clientY - dragStartY;
-            const newX = boxStartX + deltaX;
-            const newY = boxStartY + deltaY;
+            const currentX = e.clientX;
+            const currentY = e.clientY;
 
-            updateSelectionBox(newX, newY, selectionWidth, selectionHeight);
+            const x = Math.min(startX, currentX);
+            const y = Math.min(startY, currentY);
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+
+            updateSelectionBox(x, y, width, height);
         });
 
         window.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
+            if (!isDrawing) return;
+            
             e.preventDefault();
-            isDragging = false;
-            selectionBox.classList.remove('dragging');
+            isDrawing = false;
+
+            const currentX = e.clientX;
+            const currentY = e.clientY;
+
+            const x = Math.min(startX, currentX);
+            const y = Math.min(startY, currentY);
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+
+            // Minimum selection size
+            if (width < 50 || height < 50) {
+                selectionBox.classList.remove('active');
+                instructions.classList.remove('hidden');
+                return;
+            }
+
+            // Store selection with local coordinates (will be converted by main process)
+            currentSelection = {
+                x: Math.round(x),
+                y: Math.round(y),
+                width: Math.round(width),
+                height: Math.round(height)
+            };
+
+            positionConfirmButtons();
+            confirmButtons.classList.add('visible');
         });
 
-        // Size input handlers
-        widthInput.addEventListener('input', () => {
-            selectionWidth = Math.max(320, parseInt(widthInput.value) || 800);
-            widthInput.value = selectionWidth;
-            const rect = selectionBox.getBoundingClientRect();
-            updateSelectionBox(rect.left, rect.top, selectionWidth, selectionHeight);
-        });
-
-        heightInput.addEventListener('input', () => {
-            selectionHeight = Math.max(240, parseInt(heightInput.value) || 600);
-            heightInput.value = selectionHeight;
-            const rect = selectionBox.getBoundingClientRect();
-            updateSelectionBox(rect.left, rect.top, selectionWidth, selectionHeight);
-        });
-
-        // Preset buttons
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                selectionWidth = parseInt(btn.dataset.width);
-                selectionHeight = parseInt(btn.dataset.height);
-                widthInput.value = selectionWidth;
-                heightInput.value = selectionHeight;
-                centerSelectionBox();
-            });
-        });
-
-        // Confirm and cancel
         confirmBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            document.documentElement.classList.add('closing');
-            document.body.classList.add('closing');
-            setTimeout(() => {
-                window.electronAPI.sendSelectionComplete(getSelection());
-            }, 150);
+            if (currentSelection) {
+                // Add closing animation
+                document.documentElement.classList.add('closing');
+                document.body.classList.add('closing');
+                // Send selection after a short delay for animation
+                setTimeout(() => {
+                    window.electronAPI.sendSelectionComplete(currentSelection);
+                }, 150);
+            }
         });
 
         cancelBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            // Add closing animation
             document.documentElement.classList.add('closing');
             document.body.classList.add('closing');
             setTimeout(() => {
@@ -479,17 +350,19 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' || e.key === 'Esc') {
                 e.preventDefault();
+                // Add closing animation
                 document.documentElement.classList.add('closing');
                 document.body.classList.add('closing');
                 setTimeout(() => {
                     window.electronAPI.sendSelectionCancelled();
                 }, 150);
-            } else if (e.key === 'Enter') {
+            } else if (e.key === 'Enter' && currentSelection) {
                 e.preventDefault();
+                // Add closing animation
                 document.documentElement.classList.add('closing');
                 document.body.classList.add('closing');
                 setTimeout(() => {
-                    window.electronAPI.sendSelectionComplete(getSelection());
+                    window.electronAPI.sendSelectionComplete(currentSelection);
                 }, 150);
             }
         });

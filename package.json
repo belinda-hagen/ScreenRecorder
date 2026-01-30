@@ -32,7 +32,7 @@
       "index.html",
       "selection.html",
       "package.json",
-      "build/icons/icon.png"
+      "icon.png"
     ],
     "win": {
       "target": [
