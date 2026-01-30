@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.2-667eea?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/version-1.3.3-667eea?style=for-the-badge" />
   <img src="https://img.shields.io/badge/electron-39.2.7-764ba2?style=for-the-badge&logo=electron" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-4ade80?style=for-the-badge" />
   <img src="https://img.shields.io/badge/license-MIT-fbbf24?style=for-the-badge" />
