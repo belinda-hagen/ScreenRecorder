@@ -30,9 +30,10 @@
       "main.js",
       "preload.js",
       "index.html",
-      "selection.html",
-      "package.json",
-      "icon.png"
+      "selection-fixed.html",
+      "css/**/*",
+      "assets/**/*",
+      "package.json"
     ],
     "win": {
       "target": [
