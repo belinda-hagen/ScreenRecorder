@@ -16,6 +16,7 @@
 
     body {
       font-family: 'Segoe UI', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #18181b 100%);
       min-height: 100vh;
       color: #fafafa;
       overflow: hidden;
@@ -25,7 +26,6 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
       border: 1px solid rgba(118, 75, 162, 0.3);
       border-radius: 12px;
       overflow: hidden;
@@ -38,7 +38,8 @@
       justify-content: space-between;
       padding: 0 10px;
       height: 34px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
       -webkit-app-region: drag;
       user-select: none;
     }
@@ -117,12 +118,12 @@
     .logo {
       width: 24px;
       height: 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(118, 75, 162, 0.4);
+      box-shadow: 0 2px 6px rgba(139, 92, 246, 0.4);
     }
 
     .logo svg {
@@ -169,25 +170,62 @@
     .main {
       flex: 1;
       padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-rows: auto auto auto auto auto;
+      gap: 12px;
       overflow-y: auto;
+    }
+    
+    .main > .preview-container {
+      grid-column: 1;
+      grid-row: 1 / 6;
+    }
+    
+    .main > .timer-row {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    
+    .main > .section:nth-of-type(1) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    
+    .main > .section:nth-of-type(2) {
+      grid-column: 2;
+      grid-row: 3;
+    }
+    
+    .main > .section:nth-of-type(3) {
+      grid-column: 2;
+      grid-row: 4;
+    }
+    
+    .main > .controls {
+      grid-column: 1 / 3;
+      grid-row: 6;
+      margin-top: 4px;
     }
 
     /* Preview */
     .preview-container {
-      background: #0f0f23;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
       border-radius: 12px;
       overflow: hidden;
       position: relative;
-      border: 1px solid rgba(118, 75, 162, 0.2);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .preview-video {
       width: 100%;
-      height: 160px;
+      height: 100%;
+      max-height: 400px;
       object-fit: contain;
       display: block;
     }
@@ -219,11 +257,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 16px;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-      border: 1px solid rgba(118, 75, 162, 0.2);
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(124, 58, 237, 0.08) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.3);
       border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
     .timer {
@@ -294,7 +332,12 @@
     .section {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .section-header {
@@ -327,23 +370,24 @@
       align-items: center;
       gap: 10px;
       padding: 10px 12px;
-      background: rgba(102, 126, 234, 0.08);
-      border: 1px solid rgba(118, 75, 162, 0.15);
+      background: rgba(79, 70, 229, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.2);
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
     .source-item:hover {
-      background: rgba(102, 126, 234, 0.15);
-      border-color: rgba(118, 75, 162, 0.3);
+      background: rgba(79, 70, 229, 0.15);
+      border-color: rgba(139, 92, 246, 0.35);
       transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
     }
 
     .source-item.selected {
-      border-color: #667eea;
-      background: rgba(102, 126, 234, 0.2);
-      box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+      border-color: #8b5cf6;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(124, 58, 237, 0.15) 100%);
+      box-shadow: 0 0 24px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(79, 70, 229, 0.2);
     }
 
     .source-thumb {
@@ -389,6 +433,68 @@
 
     .source-item.selected .source-check svg {
       opacity: 1;
+    }
+
+    /* Selection source specific */
+    .source-item.selection-source {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .selection-btn {
+      margin-top: 8px;
+      margin-left: 54px;
+      width: calc(100% - 54px - 30px);
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .source-item.selection-source.selected .selection-btn {
+      display: flex;
+    }
+
+    .selection-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .selection-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .selection-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .selection-preview {
+      margin-top: 6px;
+      margin-left: 54px;
+      width: calc(100% - 54px - 30px);
+      padding: 6px 10px;
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(118, 75, 162, 0.2);
+      border-radius: 6px;
+      font-size: 11px;
+      color: #a78bfa;
+      display: none;
+    }
+
+    .source-item.selection-source.selected .selection-preview.has-selection {
+      display: block;
     }
 
     /* Audio options */
@@ -567,14 +673,16 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      background: linear-gradient(135deg, #f87171 0%, #dc2626 50%, #b91c1c 100%);
       color: #fff;
-      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5);
+      box-shadow: 0 8px 28px rgba(239, 68, 68, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+      background: linear-gradient(135deg, #fca5a5 0%, #ef4444 50%, #dc2626 100%);
     }
 
     .btn-primary:active:not(:disabled) {
@@ -588,9 +696,17 @@
 
     .btn-secondary {
       flex: 1;
-      background: rgba(102, 126, 234, 0.15);
-      border: 1px solid rgba(118, 75, 162, 0.3);
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.35);
       color: #e4e4e7;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25) 0%, rgba(124, 58, 237, 0.2) 100%);
+      border-color: rgba(139, 92, 246, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     .btn-secondary:hover:not(:disabled) {
@@ -601,56 +717,66 @@
 
     .btn-ghost {
       background: transparent;
-      color: #9ca3af;
-      border: 1px solid rgba(118, 75, 162, 0.25);
+      color: #a1a1aa;
+      border: 1px solid rgba(139, 92, 246, 0.25);
     }
 
     .btn-ghost:hover:not(:disabled) {
-      background: rgba(102, 126, 234, 0.1);
-      border-color: rgba(118, 75, 162, 0.4);
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.08) 100%);
+      border-color: rgba(139, 92, 246, 0.4);
       color: #c4b5fd;
     }
 
     /* Toast */
     .toast {
       position: fixed;
-      bottom: 24px;
-      left: 24px;
-      right: 24px;
-      padding: 14px 18px;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-      border: 1px solid rgba(118, 75, 162, 0.3);
-      backdrop-filter: blur(12px);
-      border-radius: 12px;
-      font-size: 13px;
-      color: #e4e4e7;
-      transform: translateY(100px);
+      top: 70px;
+      right: 20px;
+      max-width: 350px;
+      padding: 12px 16px;
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      backdrop-filter: blur(16px);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #f3f4f6;
+      transform: translateX(400px);
       opacity: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      gap: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(167, 139, 250, 0.1);
+      z-index: 10000;
     }
 
     .toast.show {
-      transform: translateY(0);
+      transform: translateX(0);
       opacity: 1;
     }
 
     .toast.success {
-      border-color: rgba(34, 197, 94, 0.5);
-      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+      border-color: rgba(34, 197, 94, 0.6);
+      background: rgba(17, 24, 39, 0.95);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(34, 197, 94, 0.15);
     }
 
     .toast.error {
-      border-color: rgba(239, 68, 68, 0.5);
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+      border-color: rgba(239, 68, 68, 0.6);
+      background: rgba(17, 24, 39, 0.95);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.15);
+    }
+
+    .toast.info {
+      border-color: rgba(59, 130, 246, 0.6);
+      background: rgba(17, 24, 39, 0.95);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.15);
     }
 
     .toast svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       flex-shrink: 0;
     }
 
@@ -660,6 +786,10 @@
 
     .toast.error svg {
       color: #ef4444;
+    }
+
+    .toast.info svg {
+      color: #3b82f6;
     }
 
     /* Scrollbar */
@@ -678,6 +808,107 @@
 
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(118, 75, 162, 0.5);
+    }
+
+    /* Monitor Selection Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 1px solid rgba(118, 75, 162, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal h3 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .monitor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .monitor-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(118, 75, 162, 0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .monitor-item:hover {
+      background: rgba(102, 126, 234, 0.2);
+      border-color: rgba(118, 75, 162, 0.4);
+    }
+
+    .monitor-item svg {
+      width: 32px;
+      height: 32px;
+      color: #a78bfa;
+    }
+
+    .monitor-info {
+      flex: 1;
+    }
+
+    .monitor-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+
+    .monitor-details {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .modal-cancel {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid rgba(118, 75, 162, 0.3);
+      border-radius: 8px;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-cancel:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
     }
   </style>
 </head>
@@ -838,6 +1069,17 @@
     </div>
   </div>
 
+  <!-- Monitor Selection Modal -->
+  <div class="modal-overlay" id="monitorModal">
+    <div class="modal">
+      <h3>Select Monitor for Selection Area</h3>
+      <div class="monitor-list" id="monitorList">
+        <!-- Monitors will be populated dynamically -->
+      </div>
+      <button class="modal-cancel" id="cancelMonitorBtn">Cancel</button>
+    </div>
+  </div>
+
   <div class="toast" id="notification">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -872,6 +1114,7 @@
     let isRecording = false;
     let isPaused = false;
     let mediaStream = null;
+    let selectionArea = null; // For selection recording
     let ffmpegAvailable = false;
 
     // Check FFmpeg availability on load
@@ -957,6 +1200,42 @@
           item.onclick = () => selectSource(source, item);
           sourceList.appendChild(item);
         });
+
+        // Add Selection source option
+        const selectionItem = document.createElement('div');
+        selectionItem.className = 'source-item selection-source';
+        selectionItem.id = 'selectionSourceItem';
+        selectionItem.innerHTML = `
+          <div class="source-thumb" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width: 20px; height: 20px;">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/>
+              <path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke-opacity="0.3"/>
+            </svg>
+          </div>
+          <span class="source-name">Selection (Region)</span>
+          <span class="source-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <button class="selection-btn" id="selectAreaBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M12 8v8M8 12h8"/>
+            </svg>
+            Position Recording Area
+          </button>
+          <div class="selection-preview" id="selectionPreview"></div>
+        `;
+        selectionItem.onclick = (e) => {
+          if (!e.target.closest('.selection-btn')) {
+            selectSelectionSource(selectionItem);
+          }
+        };
+        sourceList.appendChild(selectionItem);
+
+        // Add click handler for selection button
+        document.getElementById('selectAreaBtn').addEventListener('click', openSelectionWindow);
       } catch (error) {
         console.error('Error loading sources:', error);
         showNotification('Error loading sources', 'error');
@@ -965,10 +1244,127 @@
 
     function selectSource(source, item) {
       selectedSource = source;
+      selectionArea = null; // Clear any selection area
       document.querySelectorAll('.source-item').forEach(el => el.classList.remove('selected'));
       item.classList.add('selected');
       startBtn.disabled = false;
       showNotification('Source selected', 'success');
+    }
+
+    function selectSelectionSource(item) {
+      selectedSource = { id: 'selection', name: 'Selection' };
+      document.querySelectorAll('.source-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+
+      // Enable start button only if we have a selection area
+      startBtn.disabled = !selectionArea;
+
+      if (!selectionArea) {
+        showNotification('Click "Position Recording Area" to define the region', 'info');
+      }
+    }
+
+    function resetSelectAreaButton() {
+      const selectAreaBtn = document.getElementById('selectAreaBtn');
+      selectAreaBtn.disabled = false;
+      selectAreaBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="20" rx="2"/>
+          <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/>
+        </svg>
+        Position Recording Area
+      `;
+    }
+
+    async function openSelectionWindow() {
+      const selectAreaBtn = document.getElementById('selectAreaBtn');
+      
+      // Prevent multiple clicks
+      if (selectAreaBtn.disabled) return;
+      
+      try {
+        // Disable button during selection process
+        selectAreaBtn.disabled = true;
+        selectAreaBtn.textContent = 'Selecting...';
+        
+        // Get available displays
+        const displays = await window.electronAPI.getDisplays();
+        
+        if (displays.length === 1) {
+          // Only one display, skip modal and open selection directly
+          showNotification('Position the recording area...', 'info');
+          const selection = await window.electronAPI.openSelectionWindow(displays[0].id, true);
+          handleSelectionResult(selection);
+        } else {
+          // Multiple displays, show modal
+          showMonitorModal(displays);
+        }
+      } catch (error) {
+        console.error('Error opening selection window:', error);
+        showNotification('Error opening selection window', 'error');
+        resetSelectAreaButton();
+      }
+    }
+
+    function showMonitorModal(displays) {
+      const modal = document.getElementById('monitorModal');
+      const monitorList = document.getElementById('monitorList');
+      
+      // Populate monitor list
+      monitorList.innerHTML = '';
+      displays.forEach((display, index) => {
+        const isPrimary = display.bounds.x === 0 && display.bounds.y === 0;
+        const item = document.createElement('div');
+        item.className = 'monitor-item';
+        const scalePercent = Math.round(display.scaleFactor * 100);
+        const scaleInfo = display.scaleFactor !== 1 ? ` • ${scalePercent}% scale` : '';
+        item.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          <div class="monitor-info">
+            <div class="monitor-name">Monitor ${index + 1}${isPrimary ? ' (Primary)' : ''}${scaleInfo}</div>
+            <div class="monitor-details">${display.bounds.width} × ${display.bounds.height}</div>
+          </div>
+        `;
+        item.addEventListener('click', async () => {
+          modal.classList.remove('show');
+          showNotification('Position the recording area...', 'info');
+          const selection = await window.electronAPI.openSelectionWindow(display.id, true);
+          handleSelectionResult(selection);
+        });
+        monitorList.appendChild(item);
+      });
+      
+      modal.classList.add('show');
+    }
+
+    // Handle cancel button in modal
+    document.getElementById('cancelMonitorBtn').addEventListener('click', () => {
+      document.getElementById('monitorModal').classList.remove('show');
+      resetSelectAreaButton();
+    });
+
+    function handleSelectionResult(selection) {
+      // Always re-enable the button after selection process
+      resetSelectAreaButton();
+      
+      if (selection) {
+        selectionArea = selection;
+
+        // Update the preview
+        const previewEl = document.getElementById('selectionPreview');
+        const scaleInfo = selection.displayScaleFactor !== 1 ? ` (${Math.round(selection.displayScaleFactor * 100)}% scale)` : '';
+        previewEl.textContent = `Region: ${selection.width} × ${selection.height}${scaleInfo} at (${selection.x}, ${selection.y})`;
+        previewEl.classList.add('has-selection');
+
+        startBtn.disabled = false;
+        showNotification(`Selection set: ${selection.width}×${selection.height}`, 'success');
+      } else {
+        showNotification('Selection cancelled', 'info');
+      }
     }
 
     async function startRecording() {
@@ -977,10 +1373,57 @@
         return;
       }
 
+      // Check if selection mode but no area defined
+      if (selectedSource.id === 'selection' && !selectionArea) {
+        showNotification('Please draw a selection area first', 'error');
+        return;
+      }
+
       try {
+        let sourceId = selectedSource.id;
+
+        // For selection recording, we need to get the screen source that contains the selection
+        if (selectedSource.id === 'selection') {
+          const sources = await window.electronAPI.getSources();
+          
+          if (sources.length > 0) {
+            // Try to find the screen source for the specific display
+            let matchingSource = null;
+            
+            if (selectionArea.displayId) {
+              // Try multiple matching strategies
+              // 1. Try exact display_id match (as string)
+              matchingSource = sources.find(s => s.display_id && String(s.display_id) === String(selectionArea.displayId));
+              
+              // 2. If no match, try to match by screen index in the name
+              if (!matchingSource && sources.length > 1) {
+                // Get all displays to find the index
+                const displays = await window.electronAPI.getDisplays();
+                const displayIndex = displays.findIndex(d => d.id === selectionArea.displayId);
+                
+                if (displayIndex >= 0 && displayIndex < sources.length) {
+                  matchingSource = sources[displayIndex];
+                }
+              }
+              
+              // 3. If still no match, try to find by name matching
+              if (!matchingSource) {
+                // Screen sources typically named "Screen 1", "Screen 2", etc.
+                matchingSource = sources.find(s => s.name && s.name.toLowerCase().includes('screen'));
+              }
+            }
+            
+            // Fall back to first screen source if no match
+            sourceId = matchingSource ? matchingSource.id : sources[0].id;
+          } else {
+            showNotification('No screen source available', 'error');
+            return;
+          }
+        }
+
         const screenConstraints = {
           audio: systemAudioCheckbox.checked ? { mandatory: { chromeMediaSource: 'desktop' } } : false,
-          video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: selectedSource.id } }
+          video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: sourceId } }
         };
 
         mediaStream = await navigator.mediaDevices.getUserMedia(screenConstraints);
@@ -1005,6 +1448,106 @@
           } catch (micError) {
             console.warn('Could not access microphone:', micError);
           }
+        }
+
+        // For selection recording, we need to crop the video using canvas
+        if (selectedSource.id === 'selection' && selectionArea) {
+          const videoTrack = mediaStream.getVideoTracks()[0];
+          const settings = videoTrack.getSettings();
+
+          // Create a video element to capture the stream
+          const videoEl = document.createElement('video');
+          videoEl.srcObject = new MediaStream([videoTrack]);
+          videoEl.muted = true;
+          
+          // Wait for video to be ready
+          await new Promise((resolve) => {
+            videoEl.onloadedmetadata = () => resolve();
+          });
+          
+          await videoEl.play();
+
+          // Get display information for proper scaling
+          const displayScaleFactor = selectionArea.displayScaleFactor || 1;
+          const displayBounds = selectionArea.displayBounds;
+          
+          // Canvas dimensions should match the logical pixels from selection
+          const canvas = document.createElement('canvas');
+          canvas.width = selectionArea.width;
+          canvas.height = selectionArea.height;
+          const ctx = canvas.getContext('2d', { 
+            alpha: false,
+            desynchronized: true 
+          });
+          
+          // Set canvas rendering quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // IMPORTANT: Use the actual video element dimensions, not settings
+          // The settings can report a different resolution than what's actually rendered
+          const actualVideoWidth = videoEl.videoWidth;
+          const actualVideoHeight = videoEl.videoHeight;
+
+          // The video capture resolution vs display logical resolution
+          const displayLogicalWidth = displayBounds.width;
+          const displayLogicalHeight = displayBounds.height;
+          
+          // Calculate scale using actual video dimensions
+          const actualScale = actualVideoWidth / displayLogicalWidth;
+          
+          // Selection coordinates relative to display origin (in logical pixels)
+          const relativeX = selectionArea.x - displayBounds.x;
+          const relativeY = selectionArea.y - displayBounds.y;
+          
+          // Convert to video pixels using the actual scale
+          const cropX = relativeX * actualScale;
+          const cropY = relativeY * actualScale;
+          const cropWidth = selectionArea.width * actualScale;
+          const cropHeight = selectionArea.height * actualScale;
+
+          // Draw cropped region to canvas at 30fps
+          const drawFrame = () => {
+            if (!isRecording && !isPaused) return;
+            try {
+              ctx.drawImage(
+                videoEl,
+                cropX,
+                cropY,
+                cropWidth,
+                cropHeight,
+                0,
+                0,
+                selectionArea.width,
+                selectionArea.height
+              );
+            } catch (err) {
+              console.error('Error drawing frame:', err);
+            }
+            if (isRecording || isPaused) {
+              requestAnimationFrame(drawFrame);
+            }
+          };
+
+          // Start drawing
+          isRecording = true; // Set early so drawFrame loop works
+          drawFrame();
+
+          // Get canvas stream
+          const canvasStream = canvas.captureStream(30);
+
+          // Add audio track if exists
+          const audioTracks = mediaStream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            canvasStream.addTrack(audioTracks[0]);
+          }
+
+          // Use the cropped stream for recording
+          mediaStream = canvasStream;
+
+          // Store video element for cleanup
+          mediaStream._videoEl = videoEl;
+          mediaStream._originalVideoTrack = videoTrack;
         }
 
         preview.srcObject = mediaStream;
@@ -1050,8 +1593,6 @@
         pauseBtn.disabled = false;
         stopBtn.disabled = false;
         resetBtn.disabled = true;
-
-        showNotification('Recording started', 'success');
       } catch (error) {
         console.error('Error starting recording:', error);
         showNotification('Error: ' + error.message, 'error');
@@ -1092,6 +1633,15 @@
 
       mediaRecorder.stop();
 
+      // Clean up video element if used for selection recording
+      if (mediaStream._videoEl) {
+        mediaStream._videoEl.pause();
+        mediaStream._videoEl.srcObject = null;
+      }
+      if (mediaStream._originalVideoTrack) {
+        mediaStream._originalVideoTrack.stop();
+      }
+
       if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
       clearInterval(timerInterval);
 
@@ -1120,8 +1670,16 @@
       timerDisplay.textContent = '00:00:00';
       recordedChunks = [];
       selectedSource = null;
+      selectionArea = null;
 
       document.querySelectorAll('.source-item').forEach(el => el.classList.remove('selected'));
+
+      // Clear selection preview
+      const previewEl = document.getElementById('selectionPreview');
+      if (previewEl) {
+        previewEl.textContent = '';
+        previewEl.classList.remove('has-selection');
+      }
 
       updateStatus('Ready');
       startBtn.disabled = true;

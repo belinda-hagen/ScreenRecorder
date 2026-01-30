@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -13,29 +13,26 @@ try {
 }
 
 let mainWindow;
+let selectionWindow = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 360,
-    height: 880,
-    minWidth: 340,
-    minHeight: 700,
+    width: 900,
+    height: 820,
+    minWidth: 800,
+    minHeight: 750,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     },
     icon: path.join(__dirname, 'icon.png'),
-    ...(process.platform === 'win32' && {
-      // Note: use 8-digit hex for alpha transparency. '#00000000' = fully transparent
-      backgroundColor: '#00000000',
-      roundedCorners: true,
-    }),
     title: 'Screen Recorder',
     resizable: true,
     autoHideMenuBar: true,
     frame: false,
     transparent: true,
+    backgroundColor: '#ffffff00'
   });
 
   mainWindow.loadFile('index.html');
@@ -84,7 +81,8 @@ ipcMain.handle('get-sources', async () => {
     return sources.map(source => ({
       id: source.id,
       name: source.name,
-      thumbnail: source.thumbnail.toDataURL()
+      thumbnail: source.thumbnail.toDataURL(),
+      display_id: source.display_id // Include display_id for matching with displays
     }));
   } catch (error) {
     console.error('Error getting sources:', error);
@@ -223,4 +221,125 @@ ipcMain.handle('check-ffmpeg', async () => {
 // Handle opening external URLs
 ipcMain.handle('open-external', async (event, url) => {
   await shell.openExternal(url);
+});
+
+// Handle getting all displays for selection
+ipcMain.handle('get-displays', () => {
+  const displays = screen.getAllDisplays();
+  const primaryDisplay = screen.getPrimaryDisplay();
+  
+  return displays.map(display => ({
+    id: display.id,
+    bounds: display.bounds,
+    workArea: display.workArea,
+    scaleFactor: display.scaleFactor,
+    size: display.size,
+    workAreaSize: display.workAreaSize,
+    rotation: display.rotation,
+    isPrimary: display.id === primaryDisplay.id
+  }));
+});
+
+// Handle opening selection overlay window
+ipcMain.handle('open-selection-window', async (event, displayId, useFixedSize = true) => {
+  return new Promise((resolve) => {
+    const displays = screen.getAllDisplays();
+    let targetDisplay;
+    
+    if (displayId !== undefined && displayId !== null) {
+      // Find the specific display
+      targetDisplay = displays.find(d => d.id === displayId);
+    }
+    
+    if (!targetDisplay) {
+      // Use primary display if no specific one requested
+      targetDisplay = screen.getPrimaryDisplay();
+    }
+
+    const bounds = targetDisplay.bounds;
+
+    selectionWindow = new BrowserWindow({
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: false,
+      fullscreenable: false,
+      show: false, // Don't show immediately
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false
+      }
+    });
+
+    // Load the appropriate selection HTML based on mode
+    const selectionFile = useFixedSize ? 'selection-fixed.html' : 'selection.html';
+    selectionWindow.loadFile(selectionFile);
+    
+    // Ensure the window fills the entire display, accounting for scaling
+    selectionWindow.once('ready-to-show', () => {
+      // Set bounds precisely to match the display
+      selectionWindow.setBounds(bounds, false);
+      selectionWindow.show();
+      selectionWindow.focus();
+    });
+    
+    selectionWindow.setVisibleOnAllWorkspaces(true);
+
+    // Clean up any existing listeners
+    ipcMain.removeAllListeners('selection-complete');
+    ipcMain.removeAllListeners('selection-cancelled');
+
+    // Listen for selection result
+    ipcMain.once('selection-complete', (e, selection) => {
+      if (selectionWindow && !selectionWindow.isDestroyed()) {
+        // Use setImmediate to ensure the window closes after the event is handled
+        setImmediate(() => {
+          if (selectionWindow && !selectionWindow.isDestroyed()) {
+            selectionWindow.close();
+          }
+          selectionWindow = null;
+        });
+      }
+      // Convert local window coordinates to absolute screen coordinates
+      // The selection coordinates are already in physical pixels from the selection window
+      const absoluteSelection = {
+        x: selection.x + bounds.x,
+        y: selection.y + bounds.y,
+        width: selection.width,
+        height: selection.height,
+        displayId: targetDisplay.id,
+        displayBounds: targetDisplay.bounds,
+        displayScaleFactor: targetDisplay.scaleFactor,
+        // Store the physical size for proper video cropping
+        physicalWidth: Math.round(selection.width * targetDisplay.scaleFactor),
+        physicalHeight: Math.round(selection.height * targetDisplay.scaleFactor)
+      };
+      resolve(absoluteSelection);
+    });
+
+    ipcMain.once('selection-cancelled', () => {
+      if (selectionWindow && !selectionWindow.isDestroyed()) {
+        setImmediate(() => {
+          if (selectionWindow && !selectionWindow.isDestroyed()) {
+            selectionWindow.close();
+          }
+          selectionWindow = null;
+        });
+      }
+      resolve(null);
+    });
+
+    // Also handle window close
+    selectionWindow.on('closed', () => {
+      selectionWindow = null;
+      resolve(null);
+    });
+  });
 });
