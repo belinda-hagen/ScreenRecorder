@@ -31,7 +31,6 @@
       "preload.js",
       "index.html",
       "selection.html",
-      "selection-fixed.html",
       "package.json",
       "build/icons/icon.png"
     ],

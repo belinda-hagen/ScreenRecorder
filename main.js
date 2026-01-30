@@ -278,9 +278,8 @@ ipcMain.handle('open-selection-window', async (event, displayId, useFixedSize = 
       }
     });
 
-    // Load the appropriate selection HTML based on mode
-    const selectionFile = useFixedSize ? 'selection-fixed.html' : 'selection.html';
-    selectionWindow.loadFile(selectionFile);
+    // Load the selection overlay
+    selectionWindow.loadFile('selection.html');
     
     // Ensure the window fills the entire display, accounting for scaling
     selectionWindow.once('ready-to-show', () => {
