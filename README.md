@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="Screen Recorder Icon" width="128" height="128">
+  <img src="assets/icons/icon.png" alt="Screen Recorder Icon" width="128" height="128">
 </p>
 
 <h1 align="center">ScreenRecorder</h1>
