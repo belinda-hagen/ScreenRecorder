@@ -9,7 +9,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.3-667eea?style=for-the-badge" />
+  <a href="https://github.com/belinda-hagen/ScreenRecorder/releases/latest">
+    <img src="https://img.shields.io/github/v/release/belinda-hagen/ScreenRecorder?style=for-the-badge&color=667eea&label=version" />
+  </a>
   <img src="https://img.shields.io/badge/electron-39.2.7-764ba2?style=for-the-badge&logo=electron" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-4ade80?style=for-the-badge" />
   <img src="https://img.shields.io/badge/license-MIT-fbbf24?style=for-the-badge" />
@@ -37,8 +39,8 @@ Download the latest release from the [Releases](https://github.com/belinda-hagen
 
 **Available for:**
 
-- **Windows**: `.exe` portable version
-- **Linux**: `.AppImage` and `.deb` packages
+- **Windows**: `.exe` portable version, no installation needed
+- **Linux**: `.AppImage`. Make it executable first with `chmod +x ScreenRecorder-*.AppImage`
 
 > **Note**: macOS users can build from source (see Development section below).
 
@@ -46,7 +48,7 @@ Download the latest release from the [Releases](https://github.com/belinda-hagen
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v20 or higher)
 - npm
 
 ### Setup
@@ -97,17 +99,18 @@ Built files will be in the `dist` folder.
 
 ## Usage
 
-1. Select a screen source from the list
-2. Toggle audio options (System audio / Microphone)
-3. Click **Start Recording** to begin
-4. Use **Pause** to pause/resume the recording
-5. Click **Stop** to finish and save your recording
+1. Pick a source under **Source**: a full screen, a window, or a selected area
+2. Choose your **Audio inputs** (system audio and/or microphone)
+3. Pick an **Output format**
+4. Click **Start Recording**. The preview and elapsed time show what's being captured
+5. Use **Pause** to pause and resume, then **Stop** to finish and save your recording
 
 ## Tech Stack
 
 - **Electron** - Cross-platform desktop apps
 - **HTML/CSS/JavaScript** - Frontend
 - **MediaRecorder API** - Screen capture
+- **FFmpeg** - Converting to MP4, MKV, MOV and AVI
 
 ## License
 
