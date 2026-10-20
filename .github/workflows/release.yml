@@ -1,53 +1,74 @@
 name: Build App for Win/Linux
 
+# Every push to main builds the Windows and Linux apps and creates (or refreshes)
+# a draft release for the version in package.json. Publishing the draft on GitHub
+# creates the tag. Once a version is published, bump package.json for a new draft.
 on:
   push:
-    tags:
-      - v*.*.*
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-linux:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: win
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (${{ matrix.platform }})
+        run: npx electron-builder --${{ matrix.platform }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-artifacts
+          path: |
+            dist/*.exe
+            dist/*.AppImage
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm ci
-      - name: Build & Publish (Linux)
+          path: release
+          merge-multiple: true
+      - name: Create or update draft release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build && npx electron-builder --linux --publish=always
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: linux-artifacts
-          path: dist/*
-          retention-days: 1
-
-  build-windows:
-    runs-on: windows-latest
-    permissions:
-      contents: write
-      packages: write
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm ci
-      - name: Build & Publish (Windows)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build && npx electron-builder --win --publish=always
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: windows-artifacts
-          path: dist/*
-          retention-days: 1
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+          if IS_DRAFT=$(gh release view "$TAG" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$IS_DRAFT" != "true" ]; then
+              echo "::notice::$TAG is already published. Bump the version in package.json to create a new draft."
+              exit 0
+            fi
+            gh release upload "$TAG" release/* --clobber
+            gh release edit "$TAG" --target "$GITHUB_SHA"
+          else
+            gh release create "$TAG" release/* --draft --title "$VERSION" --target "$GITHUB_SHA" --generate-notes
+          fi

@@ -32,7 +32,7 @@ function createWindow() {
     autoHideMenuBar: true,
     frame: false,
     transparent: false,
-    backgroundColor: '#0a0e27'
+    backgroundColor: '#181818'
   });
 
   mainWindow.loadFile('index.html');

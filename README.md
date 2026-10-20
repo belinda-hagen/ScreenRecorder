@@ -29,7 +29,7 @@
 - Live preview while recording
 - Pause and resume recordings
 - **Multiple export formats**: WebM (native), MP4, MKV, MOV, AVI
-- Modern, beautiful purple-themed UI
+- Professional dark interface with a dedicated preview, organized settings, and clear recording controls
 
 ## Download
 
