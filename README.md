@@ -20,6 +20,9 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="assets/screenshots/main-window.png" alt="Screen Recorder main window" width="720">
+</p>
 
 ---
 
