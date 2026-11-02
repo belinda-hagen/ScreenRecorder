@@ -2,45 +2,44 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 const toIco = require('to-ico');
+const png2icons = require('png2icons');
 
+// All app and packaging icons come from the same editable vector source.
 async function generateIcons() {
-  const svgPath = path.join(__dirname, 'icon.svg');
-  const svgBuffer = fs.readFileSync(svgPath);
+  const assetsDir = path.join(__dirname, 'assets', 'icons');
+  const buildDir = path.join(__dirname, 'build');
+  const buildIconsDir = path.join(buildDir, 'icons');
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.mkdirSync(buildIconsDir, { recursive: true });
 
-  console.log('Generating PNG icons...');
-  
-  // Main icon.png (256x256 for app window)
-  await sharp(svgBuffer)
-    .resize(256, 256)
-    .png()
-    .toFile(path.join(__dirname, 'icon.png'));
-  console.log('Created icon.png (256x256)');
+  const svgBuffer = fs.readFileSync(path.join(assetsDir, 'icon.svg'));
+  const sizes = [16, 24, 32, 48, 64, 128, 256, 512, 1024];
+  const pngs = new Map();
 
-  // Large icon for build folder (512x512)
-  await sharp(svgBuffer)
-    .resize(512, 512)
-    .png()
-    .toFile(path.join(__dirname, 'build', 'icon.png'));
-  console.log('Created build/icon.png (512x512)');
+  for (const size of sizes) {
+    const png = await sharp(svgBuffer).resize(size, size).png().toBuffer();
+    pngs.set(size, png);
+    fs.writeFileSync(path.join(buildIconsDir, `${size}x${size}.png`), png);
+  }
 
-  // Generate multiple sizes for ICO (Windows needs multiple sizes embedded)
-  console.log('Generating ICO file with multiple sizes...');
-  const icoSizes = [16, 32, 48, 64, 128, 256];
-  const pngBuffers = await Promise.all(
-    icoSizes.map(size => 
-      sharp(svgBuffer)
-        .resize(size, size)
-        .png()
-        .toBuffer()
-    )
-  );
+  fs.writeFileSync(path.join(assetsDir, 'icon.png'), pngs.get(256));
+  fs.writeFileSync(path.join(assetsDir, 'icon-256.png'), pngs.get(256));
+  fs.writeFileSync(path.join(assetsDir, 'icon-1024.png'), pngs.get(1024));
+  fs.writeFileSync(path.join(buildDir, 'icon.png'), pngs.get(512));
+  fs.writeFileSync(path.join(buildIconsDir, 'icon.png'), pngs.get(512));
 
-  // Convert to ICO
-  const icoBuffer = await toIco(pngBuffers);
-  fs.writeFileSync(path.join(__dirname, 'icon.ico'), icoBuffer);
-  console.log('Created icon.ico');
+  const ico = await toIco([16, 24, 32, 48, 64, 128, 256].map(size => pngs.get(size)));
+  for (const directory of [assetsDir, buildDir, buildIconsDir]) {
+    fs.writeFileSync(path.join(directory, 'icon.ico'), ico);
+  }
 
-  console.log('\n✅ All icons generated successfully!');
+  const icns = png2icons.createICNS(pngs.get(1024), png2icons.BICUBIC, 0);
+  if (!icns) throw new Error('Could not generate the macOS icon');
+  fs.writeFileSync(path.join(buildIconsDir, 'icon.icns'), icns);
+  console.log('Generated app, Windows, macOS, and Linux icons from assets/icons/icon.svg.');
 }
 
-generateIcons().catch(console.error);
+generateIcons().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});

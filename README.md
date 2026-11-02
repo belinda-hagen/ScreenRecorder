@@ -95,6 +95,8 @@ npm run build:linux
 
 Built files will be in the `dist` folder.
 
+To update the logo, edit `assets/icons/icon.svg` and run `npm run icons` to regenerate the app and packaging icons.
+
 > **Note**: Cross-platform building has limitations. Building macOS apps requires a Mac. Windows and Linux can often be cross-compiled, but native builds are recommended.
 
 ## Usage
